@@ -13,7 +13,8 @@ import icon3 from '../../assets/images/Icon_3.png'
 import load from '../../assets/images/load.png'
 import { findMax, findMin, } from '../../assets/util/util'
 import { rainbowColors, rainbowTextColors } from "../../assets/util/color";
-import { handLine, footLine } from '../../assets/util/line'
+import { handLine, footLine } from '../../assets/util/line';
+import { Slider } from 'antd'
 let ws, xvalue = 0, yvalue = 0
 
 class Com extends React.Component {
@@ -45,7 +46,9 @@ export default function Home() {
   const [portname, setPortname] = useState()
   const [matrixName, setMatrixName] = useState('foot')
   const [valuelInit1, setValuelInit1] = useState(2)
-
+  const [length, setLength] = useState(0)
+  const [local, setLocal] = useState(false)
+  const [index, setIndex] = useState(0)
   const [xdata, setXdata] = useState(0)
   useEffect(() => {
     ws = new WebSocket(" ws://localhost:19999");
@@ -78,10 +81,12 @@ export default function Home() {
       if (jsonObject.sitData != null) {
 
         let wsPointData = jsonObject.sitData;
+        // console.log(wsPointData)
         if (!Array.isArray(wsPointData)) {
-          wsPointData = JSON.parse(JSON.parse(wsPointData));
+          wsPointData = JSON.parse(wsPointData);
         }
-        
+
+        console.log(wsPointData)
         // for (let i = 0; i < 8; i++) {
         //   for (let j = 0; j < 32; j++) {
         //     [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
@@ -118,6 +123,7 @@ export default function Home() {
 
         if (wsMatrixName == 'foot') {
           const { sitData, backData } = footLine(wsPointData)
+          console.log(sitData, backData )
           com.current?.changeDataFlag();
           com.current?.sitData({
             wsPointData: sitData,
@@ -162,6 +168,9 @@ export default function Home() {
       }
       if (jsonObject.port != null) {
         setPort(jsonObject.port);
+      }
+      if(jsonObject.length != null){
+        setLength(jsonObject.length)
       }
     };
     ws.onerror = (e) => {
@@ -215,6 +224,13 @@ export default function Home() {
     console.log(e)
     setMatrixName(e)
     wsMatrixName = e
+  }
+
+  const changeLocal = (value) => {
+    setLocal(value)
+    if (ws && ws.readyState === 1) {
+      ws.send(JSON.stringify({ local: true }));
+    }
   }
 
   return (
@@ -337,9 +353,31 @@ export default function Home() {
         setPortname={setPortname}
         wsSendObj={wsSendObj}
         changeMatrix={changeMatrix}
+        changeLocal={changeLocal}
       />
       <Aside ref={data} />
       {matrixName == 'foot' ? <Canvas ref={com} /> : <CanvasHand ref={com} />}
+
+      {local ? <div style={{ position: "fixed", bottom: 0, width: '100%' }}>
+        <Slider
+          min={0}
+          max={length - 2}
+          onChange={(value) => {
+            localStorage.setItem("localValuej", value);
+            console.log(value)
+            setIndex(value)
+            if (ws && ws.readyState === 1) {
+              // console.log(ws)
+              ws.send(value)
+            }
+            //   can3.5pvas.valuej = value
+          }}
+          value={index}
+          step={1}
+          // value={}
+          style={{ flex: 1 }}
+        />
+      </div> : null}
     </div>
   )
 }

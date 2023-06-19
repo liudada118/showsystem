@@ -11,11 +11,11 @@ import './title.scss'
 const navItems = [
   {
     label: '实时',
-    key: 'mail',
+    key: 'now',
   },
   {
     label: '回放',
-    key: 'app',
+    key: 'playback',
   },
 ];
 
@@ -62,9 +62,14 @@ const Title = (props) => {
   const onSearch = (value) => {
     console.log('search:', value);
   };
-  const [current, setCurrent] = useState('mail');
+  const [current, setCurrent] = useState('now');
   const onClick = (e) => {
-    console.log('click ', e);
+    console.log('click ', e.key);
+    if(e.key === 'now'){
+      props.changeLocal(false)
+    }else{
+      props.changeLocal(true)
+    }
     setCurrent(e.key);
   };
   return <div className="title">
