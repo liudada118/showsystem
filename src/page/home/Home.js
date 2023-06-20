@@ -3,6 +3,7 @@ import Title from '../../components/title/Title'
 import './index.scss'
 import Canvas from '../../components/three/Three'
 import CanvasHand from '../../components/three/hand'
+import CanvasCar from '../../components/three/car'
 import Aside from '../../components/aside/Aside'
 import plus from '../../assets/images/Plus.png'
 import minus from '../../assets/images/Minus.png'
@@ -11,6 +12,7 @@ import icon1 from '../../assets/images/Icon_1.png'
 import icon2 from '../../assets/images/Icon_2.png'
 import icon3 from '../../assets/images/Icon_3.png'
 import load from '../../assets/images/load.png'
+import stop from '../../assets/images/stop.png'
 import { findMax, findMin, } from '../../assets/util/util'
 import { rainbowColors, rainbowTextColors } from "../../assets/util/color";
 import { handLine, footLine } from '../../assets/util/line';
@@ -48,7 +50,9 @@ export default function Home() {
   const [valuelInit1, setValuelInit1] = useState(2)
   const [length, setLength] = useState(0)
   const [local, setLocal] = useState(false)
+  const [dataArr, setDataArr] = useState([])
   const [index, setIndex] = useState(0)
+  const [time, setTime] = useState([])
   const [xdata, setXdata] = useState(0)
   useEffect(() => {
     ws = new WebSocket(" ws://localhost:19999");
@@ -86,7 +90,7 @@ export default function Home() {
           wsPointData = JSON.parse(wsPointData);
         }
 
-        console.log(wsPointData)
+
         // for (let i = 0; i < 8; i++) {
         //   for (let j = 0; j < 32; j++) {
         //     [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
@@ -123,7 +127,6 @@ export default function Home() {
 
         if (wsMatrixName == 'foot') {
           const { sitData, backData } = footLine(wsPointData)
-          console.log(sitData, backData )
           com.current?.changeDataFlag();
           com.current?.sitData({
             wsPointData: sitData,
@@ -169,9 +172,13 @@ export default function Home() {
       if (jsonObject.port != null) {
         setPort(jsonObject.port);
       }
-      if(jsonObject.length != null){
+      if (jsonObject.length != null) {
         setLength(jsonObject.length)
       }
+      if (jsonObject.time != null) {
+        setTime(jsonObject.time)
+      }
+
     };
     ws.onerror = (e) => {
       // an error occurred
@@ -200,6 +207,13 @@ export default function Home() {
   }
 
   const wsSendObj = (obj) => {
+
+    if (obj.file) {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ file: obj.file }));
+      }
+    }
+
     if (obj.port) {
       if (ws && ws.readyState === 1) {
         ws.send(JSON.stringify({ sitPort: obj.port }));
@@ -211,11 +225,25 @@ export default function Home() {
       }
     }
 
+    if (obj.getTime) {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ getTime: obj.getTime }));
+      }
+    }
+
     if (obj.local) {
       if (ws && ws.readyState === 1) {
         ws.send(JSON.stringify({ local: obj.local }));
       }
     }
+
+    if (obj.time) {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ time: obj.time }));
+      }
+    }
+
+
   }
 
 
@@ -226,12 +254,35 @@ export default function Home() {
     wsMatrixName = e
   }
 
+  const changeDateArr = (matrixName) => {
+    if (matrixName == 'foot') {
+      const dataArr = localStorage.getItem('dataArr')
+      const arr = dataArr ? JSON.parse(dataArr) : []
+      setDataArr(arr)
+    } else if (matrixName == 'hand') {
+      const dataArr = localStorage.getItem('handArr')
+      const arr = dataArr ? JSON.parse(dataArr) : []
+      setDataArr(arr)
+    } else if (matrixName == 'car') {
+      const dataArr = localStorage.getItem('carArr')
+      const arr = dataArr ? JSON.parse(dataArr) : []
+      setDataArr(arr)
+    }
+  }
+
   const changeLocal = (value) => {
     setLocal(value)
+    changeDateArr(matrixName)
+
     if (ws && ws.readyState === 1) {
       ws.send(JSON.stringify({ local: true }));
     }
   }
+
+  const formatter = (value) => {
+
+    return `${value}%`
+  };
 
   return (
     <div className='home'>
@@ -276,15 +327,35 @@ export default function Home() {
         <div className="setIconItem setIconItem2">
           <div className='setIcon marginB10' onClick={() => {
             console.log('load')
-            wsSendObj({ flag: true })
+            const date = new Date(Date.now());
+            const formattedDate = date.toLocaleString();
+            if (matrixName == 'foot') {
+              const dataArr = localStorage.getItem('dataArr')
+              const arr = dataArr ? JSON.parse(dataArr) : []
+              arr.push(formattedDate)
+              localStorage.setItem('dataArr', JSON.stringify(arr))
+            } else if (matrixName == 'hand') {
+              const dataArr = localStorage.getItem('handArr')
+              const arr = dataArr ? JSON.parse(dataArr) : []
+              arr.push(formattedDate)
+              localStorage.setItem('handArr', JSON.stringify(arr))
+            } else if (matrixName == 'car') {
+              const dataArr = localStorage.getItem('handArr')
+              const arr = dataArr ? JSON.parse(dataArr) : []
+              arr.push(formattedDate)
+              localStorage.setItem('handArr', JSON.stringify(arr))
+            }
+
+
+            wsSendObj({ flag: true, time: formattedDate })
           }}>
             <img src={load} alt="" />
           </div>
           <div className='setIcon marginB10' onClick={() => {
             console.log('load')
-            wsSendObj({ local: true })
+            wsSendObj({ flag: false })
           }}>
-            <img src={icon1} alt="" />
+            <img src={stop} alt="" />
           </div>
           <div className='setIcon'>
             <img src={icon2} alt="" />
@@ -350,16 +421,22 @@ export default function Home() {
         com={com}
         port={port}
         portname={portname}
+        local={local}
+        dataArr={dataArr}
         setPortname={setPortname}
         wsSendObj={wsSendObj}
         changeMatrix={changeMatrix}
         changeLocal={changeLocal}
+        changeDateArr={changeDateArr}
       />
       <Aside ref={data} />
-      {matrixName == 'foot' ? <Canvas ref={com} /> : <CanvasHand ref={com} />}
+      {matrixName == 'foot' ? <Canvas ref={com} /> : matrixName == 'hand' ? <CanvasHand ref={com} /> : <CanvasCar ref={com} />}
 
-      {local ? <div style={{ position: "fixed", bottom: 0, width: '100%' }}>
+      {local ? <div style={{ position: "fixed", bottom: 0, width: '80%' }}>
         <Slider
+          tooltip={{
+            formatter,
+          }}
           min={0}
           max={length - 2}
           onChange={(value) => {
@@ -372,7 +449,9 @@ export default function Home() {
             }
             //   can3.5pvas.valuej = value
           }}
+          // value={index}
           value={index}
+
           step={1}
           // value={}
           style={{ flex: 1 }}

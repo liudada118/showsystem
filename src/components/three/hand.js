@@ -20,7 +20,7 @@ import { obj } from "../../assets/util/config";
 const group = new THREE.Group();
 const sitInit = 0;
 const backInit = 0;
-
+var animationRequestId
 const sitnum1 = 32;
 const sitnum2 = 32;
 const sitInterp = 2;
@@ -52,7 +52,7 @@ const Canvas = React.forwardRef((props, refs) => {
   let dataFlag = false;
   const changeDataFlag = () => {
     dataFlag = true;
-    // console.log("first", dataFlag);
+
   };
   let particles,
     particles1,
@@ -201,7 +201,7 @@ const Canvas = React.forwardRef((props, refs) => {
     renderer.domElement.addEventListener(
       "click",
       () => {
-        console.log(111);
+
       },
       false
     );
@@ -335,15 +335,16 @@ const Canvas = React.forwardRef((props, refs) => {
   //模型动画
 
   function animate() {
-    requestAnimationFrame(animate);
+    animationRequestId = requestAnimationFrame(animate);
     const date = new Date().getTime();
+
     render();
   }
 
 
   //  更新靠背数据
   // function backRenew() {
-  //   // console.log(valuej2)
+ 
   //   // valueg2 = 2
   //   // valuej2 = 500 
   //   // value2 =2
@@ -406,7 +407,7 @@ const Canvas = React.forwardRef((props, refs) => {
     // valueg1 = 2
     // valuej1 = 500 
     // value1 =2
-    console.log(ndata1)
+  
     interp(ndata1, bigArr, sitnum1, sitInterp);
     let bigArrs = addSide(
       bigArr,
@@ -675,7 +676,9 @@ const Canvas = React.forwardRef((props, refs) => {
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
-    return () => { };
+    return () => { 
+      cancelAnimationFrame(animationRequestId);
+    };
   }, []);
   return (
     <div>

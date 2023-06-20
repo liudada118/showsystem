@@ -41,7 +41,6 @@ const sensorArr = [
   { name: '脚型检测', info: 'foot' },
   { name: '手部检测', info: 'hand' },
   { name: '汽车座椅', info: 'car' },
-  { name: '儿童座椅', info: 'chair' },
 ]
 
 const Title = (props) => {
@@ -65,10 +64,11 @@ const Title = (props) => {
   const [current, setCurrent] = useState('now');
   const onClick = (e) => {
     console.log('click ', e.key);
-    if(e.key === 'now'){
+    if (e.key === 'now') {
       props.changeLocal(false)
-    }else{
+    } else {
       props.changeLocal(true)
+
     }
     setCurrent(e.key);
   };
@@ -81,8 +81,9 @@ const Title = (props) => {
         onChange={(e) => {
           // props.handleChangeCom(e);
           console.log(e.info);
-          props.wsSendObj({file : e})
+          props.wsSendObj({ file: e.info })
           props.changeMatrix(e.info)
+          props.changeDateArr(e.info)
           // if (ws && ws.readyState === 1)
           //   ws.send(JSON.stringify({ sitPort: e }));
         }}
@@ -99,13 +100,13 @@ const Title = (props) => {
       </Select>
 
       <Menu className='menu' onClick={onClick} selectedKeys={[current]} mode="horizontal" items={navItems} />
-      <Select
+      {!props.local ? <Select
         value={props.portname}
-        placeholder="请选择端口"
+        placeholder={!props.local ? "请选择对应选项" : "请选择回放数据时间"}
         onChange={(e) => {
           // props.handleChangeCom(e);
           console.log(e);
-          props.wsSendObj({port : e})
+          props.wsSendObj({ port: e })
           // if (ws && ws.readyState === 1)
           //   ws.send(JSON.stringify({ sitPort: e }));
         }}
@@ -119,7 +120,34 @@ const Title = (props) => {
             />
           );
         })}
-      </Select>
+      </Select> : <Select
+        value={props.dataArr}
+        placeholder={!props.local ? "请选择对应选项" : "请选择回放数据时间"}
+        onChange={(e) => {
+          // props.handleChangeCom(e);
+          console.log(e);
+          props.wsSendObj({ getTime: e,local: true,  })
+          // props.wsSendObj({port : e})
+          // if (ws && ws.readyState === 1)
+          //   ws.send(JSON.stringify({ sitPort: e }));
+        }}
+      >
+        {props.dataArr.map((el) => {
+          return (
+            <Select.Option
+              key={el}
+              label={el}
+              value={el}
+            />
+          );
+        })}
+      </Select>}
+
+      <div style={{display : 'flex'}}>
+        <div onClick={() => props.com.current?.actionBack()}>back</div>
+        <div onClick={() => props.com.current?.actionSit()}>sit</div>
+        <div onClick={() => props.com.current?.actionAll()}>all</div>
+      </div>
     </div>
     <div style={{ position: 'relative' }}>
       <img onClick={() => { setShow(!show) }} className='optionImg' src={option} alt="" />

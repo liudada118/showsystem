@@ -1,64 +1,44 @@
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-// import { FlyControls } from 'three/examples/jsm/controls/FlyControls.js';
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
-// import { SelectionBox } from 'three/addons/interactive/SelectionBox.js';
-// import { SelectionHelper } from 'three/addons/interactive/SelectionHelper.js';
 import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { TextureLoader } from "three";
+import TWEEN from "@tweenjs/tween.js";
 import {
   addSide,
   gaussBlur_1,
   interp1016,
-  jet,
+  jetWhite2,
 } from "../../assets/util/util";
-// import { withData } from "./WithData";
+
 
 import { obj } from "../../assets/util/config";
 const group = new THREE.Group();
 const sitInit = 0;
 const backInit = 0;
 var animationRequestId
-const sitnum1 = 16;
-const sitnum2 = 32;
-const sitInterp = 2;
+const sitnum1 = 10;
+const sitnum2 = 16;
+const sitInterp = 4;
 const sitOrder = 4;
-const backnum1 = 16;
-const backnum2 = 32;
-const backInterp = 2;
+const backnum1 = 10;
+const backnum2 = 12;
+const backInterp = 4;
 const backOrder = 4;
 let controlsFlag = true;
-var ndata = new Array(backnum1 * backnum2).fill(0), ndata1 = new Array(sitnum1 * sitnum2).fill(0);
-
-let valuej1 = 500,
-  valueg1 = 2,
-  value1 = 5,
-  valuel1 = 5,
-  valuef1 = 5,
-  valuej2 = 500,
-  valueg2 = 2,
-  value2 = 5,
-  valuel2 = 5,
-  valuef2 = 5,
-  valuelInit1 = 1,
-  valuelInit2 = 2;
-let enableControls = true;
-let isShiftPressed = false;
-
-
 const Canvas = React.forwardRef((props, refs) => {
   let dataFlag = false;
   const changeDataFlag = () => {
     dataFlag = true;
-    
+    // console.log("first", dataFlag);
   };
   let particles,
     particles1,
     material,
     backGeometry,
     sitGeometry,
-
+    ndata = new Array(backnum1 * backnum2).fill(0),
     bigArr1 = new Array(backnum1 * backInterp * backnum2 * backInterp).fill(1),
     bigArrg1 = new Array(
       (backnum1 * backInterp + 2 * backOrder) *
@@ -75,24 +55,15 @@ const Canvas = React.forwardRef((props, refs) => {
     ndata1Num,
     ndataNum;
 
-  let bigArr = new Array(sitnum1 * sitInterp * sitnum2 * sitInterp).fill(1);
-  let bigArrg = new Array(
-    (sitnum1 * sitInterp + sitOrder * 2) *
-    (sitnum2 * sitInterp + sitOrder * 2)
-  ).fill(1),
-    bigArrgnew = new Array(
-      (sitnum1 * sitInterp + sitOrder * 2) *
-      (sitnum2 * sitInterp + sitOrder * 2)
-    ).fill(1),
-    smoothBig = new Array(
-      (sitnum1 * sitInterp + sitOrder * 2) *
-      (sitnum2 * sitInterp + sitOrder * 2)
-    ).fill(1);
+  let bigArr = new Array(40 * sitnum2 * 4).fill(1);
+  let bigArrg = new Array((40 + 8) * (sitnum2 * 4 + 8)).fill(1),
+    bigArrgnew = new Array((40 + 8) * (sitnum2 * 4 + 8)).fill(1),
+    smoothBig = new Array((40 + 8) * (sitnum2 * 4 + 8)).fill(1);
   let i = 0;
   let ws,
     wsPointData,
-    ws1
-
+    ws1,
+    ndata1 = new Array(160).fill(1);
 
   let container, stats;
 
@@ -109,14 +80,27 @@ const Canvas = React.forwardRef((props, refs) => {
   const AMOUNTY1 = backnum2 * backInterp + backOrder * 2;
   const SEPARATION = 100;
   let group = new THREE.Group();
-
+  let valuej1 = 200,
+    valueg1 = 2,
+    value1 = 5,
+    valuel1 = 5,
+    valuef1 = 5,
+    valuej2 = 200,
+    valueg2 = 2,
+    value2 = 5,
+    valuel2 = 5,
+    valuef2 = 5,
+    valuelInit1 = 1,
+    valuelInit2 = 2;
   let positions1;
   let colors1, scales1;
   let positions;
   let colors, scales;
 
+  const positionY = 120,
+    positionX = -10;
   function init() {
-    container = document.getElementById(`canvas`);
+    container = document.getElementById(`canvas${props.index}`);
     // camera
 
     camera = new THREE.PerspectiveCamera(
@@ -126,7 +110,12 @@ const Canvas = React.forwardRef((props, refs) => {
       150000
     );
 
-
+    camera = new THREE.PerspectiveCamera(
+      40,
+      window.innerWidth / window.innerHeight,
+      1,
+      150000
+    );
     camera.position.z = 300;
     camera.position.y = 200;
     //   camera.position.x = 200;
@@ -138,79 +127,27 @@ const Canvas = React.forwardRef((props, refs) => {
     // model
     const loader = new GLTFLoader();
 
-    // const selectionBox = new SelectionBox( camera, scene );
-    // const selectHelper = new SelectionHelper( renderer, 'selectBox' );
-  
-    // document.addEventListener( 'pointerdown', function ( event ) {
-  
-    //   for ( const item of selectionBox.collection ) {
-  
-    //     item.material.emissive.set( 0x000000 );
-  
-    //   }
-  
-    //   selectionBox.startPoint.set(
-    //     ( event.clientX / window.innerWidth ) * 2 - 1,
-    //     - ( event.clientY / window.innerHeight ) * 2 + 1,
-    //     0.5 );
-  
-    // } );
-
-
-    // document.addEventListener( 'pointermove', function ( event ) {
-
-    //   if ( selectHelper.isDown ) {
-
-    //     for ( let i = 0; i < selectionBox.collection.length; i ++ ) {
-
-    //       selectionBox.collection[ i ].material.emissive.set( 0x000000 );
-
-    //     }
-
-    //     selectionBox.endPoint.set(
-    //       ( event.clientX / window.innerWidth ) * 2 - 1,
-    //       - ( event.clientY / window.innerHeight ) * 2 + 1,
-    //       0.5 );
-
-    //     const allSelected = selectionBox.select();
-
-    //     for ( let i = 0; i < allSelected.length; i ++ ) {
-
-    //       allSelected[ i ].material.emissive.set( 0xffffff );
-
-    //     }
-
-    //   }
-
-    // } );
-
-    // document.addEventListener( 'pointerup', function ( event ) {
-
-    //   selectionBox.endPoint.set(
-    //     ( event.clientX / window.innerWidth ) * 2 - 1,
-    //     - ( event.clientY / window.innerHeight ) * 2 + 1,
-    //     0.5 );
-
-    //   const allSelected = selectionBox.select();
-
-    //   for ( let i = 0; i < allSelected.length; i ++ ) {
-
-    //     allSelected[ i ].material.emissive.set( 0xffffff );
-
-    //   }
-
-    // } );
+    loader.load("./model/chair3.glb", function (gltf) {
+      chair = gltf.scene;
+      if (props.body) {
+        chair.rotation.y = -Math.PI / 2;
+        chair.position.x = 135 - positionX;
+        chair.position.y = 20 - positionY;
+        // chair.position.x = 0
+        chair.position.z = 150;
+      }
+      // scene.add(chair);
+      group.add(chair);
+      scene.add(group);
+      group.position.x = -10;
+      group.position.y = -20;
+    });
 
     // points  座椅
 
     initSet();
     initBack();
-    // scene.add(group);
-    group.rotation.x = -(Math.PI * 2) / 12
-    group.position.x = -15
-    group.position.y = 150
-    group.position.z = 230
-    scene.add(group);
+
     const helper = new THREE.GridHelper(2000, 100);
     helper.position.y = -199;
     helper.material.opacity = 0.25;
@@ -232,7 +169,6 @@ const Canvas = React.forwardRef((props, refs) => {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
-    // renderer.setSize(window.innerWidth, window.innerHeight);
 
     renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -241,11 +177,11 @@ const Canvas = React.forwardRef((props, refs) => {
       container.appendChild(renderer.domElement);
     }
 
-    renderer.setClearColor(0x000000);
+    renderer.setClearColor(0x10152b);
 
     //FlyControls
     controls = new TrackballControls(camera, renderer.domElement);
-    controls.dynamicDampingFactor = 0.2;
+    controls.dynamicDampingFactor = 0.1;
     controls.domElement = container;
     controls.mouseButtons = {
       LEFT: THREE.MOUSE.PAN, // make pan the default instead of rotate
@@ -259,14 +195,6 @@ const Canvas = React.forwardRef((props, refs) => {
     ];
 
     window.addEventListener("resize", onWindowResize);
-
-    renderer.domElement.addEventListener(
-      "click",
-      () => {
-       
-      },
-      false
-    );
   }
   //   初始化座椅
   function initSet() {
@@ -300,7 +228,7 @@ const Canvas = React.forwardRef((props, refs) => {
     function getTexture() {
       return new TextureLoader().load("");
     }
-    // require("../../assets/images/circle.png")
+
     const spite = new THREE.TextureLoader().load("./circle.png");
     material = new THREE.PointsMaterial({
       vertexColors: true,
@@ -313,16 +241,15 @@ const Canvas = React.forwardRef((props, refs) => {
     sitGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     particles = new THREE.Points(sitGeometry, material);
 
-    particles.scale.x = 0.0062;
-    particles.scale.y = 0.0062;
-    particles.scale.z = 0.0062;
+    particles.scale.x = 0.006;
+    particles.scale.y = 0.006;
+    particles.scale.z = 0.007;
 
-
-    particles.rotation.x = Math.PI / 2;
-    // particles.rotation.y = 0; //-Math.PI / 2;
-    // particles.rotation.y = Math.PI 
-    // particles.rotation.z = Math.PI
-    // scene.add(particles);
+    particles.position.z = 148;
+    particles.position.y = 70;
+    particles.position.x = -2;
+    particles.rotation.x = -Math.PI / 48;
+    particles.rotation.y = 0; //-Math.PI / 2;
     group.add(particles);
 
   }
@@ -373,18 +300,24 @@ const Canvas = React.forwardRef((props, refs) => {
 
     particles1.scale.x = 0.0062;
     particles1.scale.y = 0.0062;
-    particles1.scale.z = 0.0062;
+    particles1.scale.z = 0.008;
 
-
-    particles1.position.x = 30;
-    particles1.rotation.x = Math.PI / 2
-    // particles1.rotation.y = Math.PI 
-    // particles1.rotation.z = Math.PI
+    particles1.position.z = 108 + 15;
+    particles1.position.y = 90 + 15;
+    particles1.position.x = 1;
+    particles1.rotation.x = -Math.PI / 2 - (Math.PI * 3) / 24;
+    particles1.rotation.z = Math.PI;
+    particles1.rotation.y = 0; //Math.PI ;
     // scene.add(particles1);
     group.add(particles1);
   }
   //
-
+  function changeSitData(data) {
+    ndata = data;
+  }
+  function changeBackData(data) {
+    ndata1 = data;
+  }
   function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -403,13 +336,156 @@ const Canvas = React.forwardRef((props, refs) => {
     render();
   }
 
+  function move(position, time, particles) {
+    const p1 = {
+      x: particles.position.x,
+      y: particles.position.y,
+      z: particles.position.z,
+      rotationx: particles.rotation.x,
+      rotationy: particles.rotation.y,
+      rotationz: particles.rotation.z,
+    };
+
+    const tween1 = new TWEEN.Tween(p1)
+      .to(position, time)
+      .easing(TWEEN.Easing.Quadratic.InOut);
+
+    tween1.onUpdate(() => {
+      particles.position.set(p1.x, p1.y, p1.z);
+      particles.rotation.x = p1.rotationx;
+    });
+
+    return tween1;
+  }
+
+  function actionSit() {
+    particles.visible = true;
+    const tweena = move(
+      {
+        x: 0,
+        y: 170,
+        z: 220,
+        rotationx: Math.PI / 3,
+      },
+      1000,
+      particles
+    );
+
+    tweena.start();
+
+    controlsFlag = false;
+    particles1.visible = false;
+    chair.visible = false;
+    setTimeout(() => {
+      // const vector = new THREE.Vector3();
+
+      // // 将物体的世界坐标系位置转换为屏幕空间中的位置
+      // particles1.getWorldPosition(vector);
+      // vector.project(camera);
+
+      // // 将坐标系范围从 -1 到 1 转换为屏幕范围内的值
+      // const x = ((vector.x + 1) * window.innerWidth) / 2;
+      // const y = (-(vector.y - 1) * window.innerHeight) / 2;
+
+      // const box = particles1.getBoundingClientRect();
+      // const meshWidth = box.right - box.left;
+      // const meshHeight = box.bottom - box.top;
+      // const meshLeft = box.left;
+      // const meshTop = box.top;
+
+      // console.log(meshWidth, meshHeight, meshLeft, meshTop)
+
+      // console.log("The object is at position: ", x, y);
+    }, 1000);
+  }
+
+  function actionBack() {
+    particles1.visible = true;
+    const tweena = move(
+      {
+        x: 2,
+        y: 175,
+        z: 225,
+        rotationx: -Math.PI / 2 - (Math.PI * 4) / 24,
+      },
+      1000,
+      particles1
+    );
+
+    tweena.start();
+    // camera.position.z = 300;
+    // camera.position.y = 200;
+    // camera.position.x = 0;
+    // camera.rotation.x = -0.5
+    // camera.rotation.y = 0
+    // camera.rotation.z = 0
+    // camera.lookAt(0,0,0)
+    controlsFlag = false;
+    particles.visible = false;
+    chair.visible = false;
+  }
+
+  function actionAll() {
+    particles1.visible = true;
+    particles.visible = true;
+    chair.visible = true;
+    controlsFlag = true;
+    // camera.position.z = 300;
+    // camera.position.y = 200;
+    // camera.position.x = 0;
+    // camera.lookAt(0,0,0)
+    // 初始sit
+    // particles.position.z = 148;
+    // particles.position.y = 70;
+    // particles.position.x = -2;
+
+    // 动画后sit
+    // y: 170,
+    // z: 220,
+
+    // 初始化back
+    // particles1.position.z = 108 + 15;
+    // particles1.position.y = 90 + 15;
+    // particles1.position.x = 1;
+    // particles1.rotation.x = -Math.PI / 2 - (Math.PI * 3) / 24;
+    // particles1.rotation.z = 0; //Math.PI;
+    // particles1.rotation.y = 0; //Math.PI ;
+
+    // 动画后back
+
+    if (particles.position.z == 220) {
+      const tweena = move(
+        {
+          x: -2,
+          y: 70,
+          z: 148,
+          rotationx: -Math.PI / 48,
+        },
+        1000,
+        particles
+      );
+
+      tweena.start();
+    }
+
+    if (particles1.position.z == 225) {
+      const tweena = move(
+        {
+          x: 1,
+          y: 105,
+          z: 123,
+          rotationx: -Math.PI / 2 - (Math.PI * 3) / 24,
+        },
+        1000,
+        particles1
+      );
+
+      tweena.start();
+    }
+  }
 
   //  更新靠背数据
   function backRenew() {
-
-    // valueg2 = 2
-    // valuej2 = 500 
-    // value2 =2
     interp1016(ndata, bigArr1, backnum1, backnum2, backInterp);
     //高斯滤波
 
@@ -433,7 +509,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
     let k = 0,
       l = 0;
-   
+
     for (let ix = 0; ix < AMOUNTX1; ix++) {
       for (let iy = 0; iy < AMOUNTY1; iy++) {
         const value = bigArrg1[l] * 10;
@@ -442,8 +518,8 @@ const Canvas = React.forwardRef((props, refs) => {
         smoothBig1[l] = smoothBig1[l] + (value - smoothBig1[l] + 0.5) / valuel2;
 
         positions1[k + 1] = smoothBig1[l] / value2; // y
-        const rgb = jet(0, valuej2, smoothBig1[l]);
-  
+        const rgb = jetWhite2(0, valuej2, smoothBig1[l]);
+
         colors1[k] = rgb[0] / 255;
         colors1[k + 1] = rgb[1] / 255;
         colors1[k + 2] = rgb[2] / 255;
@@ -464,11 +540,6 @@ const Canvas = React.forwardRef((props, refs) => {
 
   //  更新座椅数据
   function sitRenew() {
-
-    // valueg1 = 2
-    // valuej1 = 500 
-    // value1 =2
-
     interp1016(ndata1, bigArr, sitnum1, sitnum2, sitInterp);
     let bigArrs = addSide(
       bigArr,
@@ -496,10 +567,18 @@ const Canvas = React.forwardRef((props, refs) => {
         //柔化处理smooth
         smoothBig[l] = smoothBig[l] + (value - smoothBig[l] + 0.5) / valuel1;
 
-        positions[k] = ix * SEPARATION - (AMOUNTX * SEPARATION) / 2; // x
+        positions[k] = ix * SEPARATION - (AMOUNTX * SEPARATION) / 2 + ix * 20; // x
         positions[k + 1] = smoothBig[l] / value1; // y
         positions[k + 2] = iy * SEPARATION - (AMOUNTY * SEPARATION) / 2; // z
-        const rgb = jet(0, valuej1, smoothBig[l]);
+        const rgb = jetWhite2(0, valuej1, smoothBig[l]);
+
+        // if (rgb[0] == 255 && rgb[1] == 255 && rgb[0] == 255) {
+        //   // console.log(123)
+        //   // positions[k] = 1000
+        //   positions[k + 1] = -10000;
+        //   positions[k + 2] = 0;
+        //   positions[k] = -10000;
+        // }
 
         colors[k] = rgb[0] / 255;
         colors[k + 1] = rgb[1] / 255;
@@ -521,13 +600,25 @@ const Canvas = React.forwardRef((props, refs) => {
   }
 
   function render() {
-
     backRenew();
     sitRenew();
-    if (enableControls && !isShiftPressed) {
+    TWEEN.update();
+    if (controlsFlag) {
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.PAN, // make pan the default instead of rotate
+        MIDDLE: THREE.MOUSE.ZOOM,
+        RIGHT: THREE.MOUSE.ROTATE,
+      };
+      controls.keys = [
+        ALT_KEY, // orbit
+        CTRL_KEY, // zoom
+        CMD_KEY, // pan
+      ];
       controls.update();
+    } else {
+      controls.keys = [];
+      controls.mouseButtons = [];
     }
-
     renderer.render(scene, camera);
   }
 
@@ -542,16 +633,16 @@ const Canvas = React.forwardRef((props, refs) => {
       valuef,
       valuelInit,
     } = prop;
-    // valuej2 = valuej;
-    // valueg2 = valueg;
-    // value2 = value;
-    // valuel2 = valuel;
-    // valuef2 = valuef;
-    // valuelInit2 = valuelInit;
+    valuej2 = valuej;
+    valueg2 = valueg;
+    value2 = value;
+    valuel2 = valuel;
+    valuef2 = valuef;
+    valuelInit2 = valuelInit;
     //处理空数组
-
-    ndata = wsPointData
-
+    // console.log(ndata)
+    ndata = wsPointData.splice(40, 160);
+    console.log(ndata);
     // 修改线序 坐垫
     ndataNum = ndata.reduce((a, b) => a + b, 0);
     ndata = ndata.map((a, index) => (a - valuef2 < 0 ? 0 : a - valuef2));
@@ -577,7 +668,6 @@ const Canvas = React.forwardRef((props, refs) => {
   }
   // 座椅数据
   function sitValue(prop) {
-  
     const { valuej, valueg, value, valuel, valuef, valuelInit } = prop;
     if (valuej) valuej1 = valuej;
     if (valueg) valueg1 = valueg;
@@ -589,12 +679,10 @@ const Canvas = React.forwardRef((props, refs) => {
 
     ndata1Num = ndata1.reduce((a, b) => a + b, 0);
     if (ndata1Num < valuelInit1) {
-      ndata1 = new Array(sitnum1 * sitnum2).fill(0);
+      ndata1 = new Array(160).fill(1);
     }
-   
   }
   function sitData(prop) {
-
     if (i < 50) {
       i++;
     } else {
@@ -609,66 +697,21 @@ const Canvas = React.forwardRef((props, refs) => {
       valuef,
       valuelInit,
     } = prop;
-  
-    // valuej1 = valuej;
-    // valueg1 = valueg;
-    // value1 = value;
-    // valuel1 = valuel;
-    // valuef1 = valuef;
+    valuej1 = valuej;
+    valueg1 = valueg;
+    value1 = value;
+    valuel1 = valuel;
+    valuef1 = valuef;
     // ndata1 = [];
     ndata1 = wsPointData;
-
-    // valuelInit1 = valuelInit;
+    valuelInit1 = valuelInit;
     // 修改线序 坐垫
     ndata1 = ndata1.map((a, index) => (a - valuef1 < 0 ? 0 : a - valuef1));
 
     ndata1Num = ndata1.reduce((a, b) => a + b, 0);
-
     if (ndata1Num < valuelInit) {
-      ndata1 = new Array(sitnum1 * sitnum2).fill(0);
+      ndata1 = new Array(160).fill(1);
     }
-    
-  }
-
-  function changeGroupRotate(obj) {
-
-    if (typeof obj.x === 'number') {
-      group.rotation.x = -(Math.PI * 2 + (obj.x) * 4) / 12
-    }
-    if (typeof obj.y === 'number') {
-      group.rotation.y = -(obj.y) * 6 / 12
-    }
-  }
-
-  function reset() {
-    
-    camera.position.z = 300;
-    camera.position.y = 200;
-    camera.position.x = 0;
-    camera.rotation._x = 0;
-    camera.rotation._y = 0;
-    camera.rotation._z = 0;
-
-    // camera = new THREE.PerspectiveCamera(
-    //   40,
-    //   window.innerWidth / window.innerHeight,
-    //   1,
-    //   150000
-    // );
-
-
-    // camera.position.z = 300;
-    // camera.position.y = 200;
-
-    // camera.position.set(0,200,300)
-
-    // renderer.render(scene, camera);
-
-    group.rotation.x = -(Math.PI * 2) / 12
-    group.rotation.y = 0
-    group.position.x = -15
-    group.position.y = 150
-    group.position.z = 230
   }
 
   useImperativeHandle(refs, () => ({
@@ -677,60 +720,19 @@ const Canvas = React.forwardRef((props, refs) => {
     changeDataFlag: changeDataFlag,
     sitValue,
     backValue,
-    backRenew,
-    sitRenew,
-    changeGroupRotate,
-    reset
-    // actionAll: actionAll,
-    // actionSit: actionSit,
-    // actionBack: actionBack,
+    actionAll: actionAll,
+    actionSit: actionSit,
+    actionBack: actionBack,
   }));
   //   视图数据
-
-  function onKeyDown(event) {
-    if (event.key === 'Shift') {
-      // enableControls = false;
-      // isShiftPressed = true;
-
-      controls.mouseButtons = null
-      controls.keys = null
-    }
-  }
-  
-  // 按键放开事件处理函数
-  function onKeyUp(event) {
-    if (event.key === 'Shift') {
-      // enableControls = true;
-      // isShiftPressed = false;
-      controls.mouseButtons = {
-        LEFT: THREE.MOUSE.PAN, // make pan the default instead of rotate
-        MIDDLE: THREE.MOUSE.ZOOM,
-        RIGHT: THREE.MOUSE.ROTATE,
-      };
-      controls.keys = [
-        ALT_KEY, // orbit
-        CTRL_KEY, // zoom
-        CMD_KEY, // pan
-      ];
-    }
-  }
-
- 
-
-
 
   const changeValue = (obj) => { };
   useEffect(() => {
     // 靠垫数据
 
     init();
-    // window.addEventListener("mousemove", () => {}, false);
+    // window.addEventListener("mousemove", onDocumentMouseMove, false);
     animate();
-
-
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-
     return () => { 
       cancelAnimationFrame(animationRequestId);
     };
@@ -738,8 +740,8 @@ const Canvas = React.forwardRef((props, refs) => {
   return (
     <div>
       <div
-        // style={{ width: "100%", height: "100%" }}
-        id={`canvas`}
+        style={{ width: "100%", height: "100%" }}
+        id={`canvas${props.index}`}
       ></div>
     </div>
   );
