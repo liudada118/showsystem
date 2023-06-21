@@ -423,6 +423,7 @@ export default function Home() {
         portname={portname}
         local={local}
         dataArr={dataArr}
+        matrixName={matrixName}
         setPortname={setPortname}
         wsSendObj={wsSendObj}
         changeMatrix={changeMatrix}

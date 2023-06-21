@@ -143,11 +143,11 @@ const Title = (props) => {
         })}
       </Select>}
 
-      <div style={{display : 'flex'}}>
-        <div onClick={() => props.com.current?.actionBack()}>back</div>
-        <div onClick={() => props.com.current?.actionSit()}>sit</div>
-        <div onClick={() => props.com.current?.actionAll()}>all</div>
-      </div>
+      {props.matrixName == 'car' ? <div style={{display : 'flex'}}>
+        <div className='aniButton' onClick={() => props.com.current?.actionBack()}>back</div>
+        <div className='aniButton' onClick={() => props.com.current?.actionSit()}>sit</div>
+        <div className='aniButton' onClick={() => props.com.current?.actionAll()}>all</div>
+      </div> : null}
     </div>
     <div style={{ position: 'relative' }}>
       <img onClick={() => { setShow(!show) }} className='optionImg' src={option} alt="" />

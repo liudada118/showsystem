@@ -7,6 +7,8 @@ import { TrackballControls } from "three/examples/jsm/controls/TrackballControls
 // import { SelectionHelper } from 'three/addons/interactive/SelectionHelper.js';
 import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { TextureLoader } from "three";
+import { SelectionBox } from './SelectionBox.js';
+import { SelectionHelper } from './SelectionHelper.js';
 import {
   addSide,
   gaussBlur_1,
@@ -51,7 +53,7 @@ const Canvas = React.forwardRef((props, refs) => {
   let dataFlag = false;
   const changeDataFlag = () => {
     dataFlag = true;
-    
+
   };
   let particles,
     particles1,
@@ -133,6 +135,8 @@ const Canvas = React.forwardRef((props, refs) => {
 
     // scene
 
+
+
     scene = new THREE.Scene();
 
     // model
@@ -140,20 +144,20 @@ const Canvas = React.forwardRef((props, refs) => {
 
     // const selectionBox = new SelectionBox( camera, scene );
     // const selectHelper = new SelectionHelper( renderer, 'selectBox' );
-  
+
     // document.addEventListener( 'pointerdown', function ( event ) {
-  
+
     //   for ( const item of selectionBox.collection ) {
-  
+
     //     item.material.emissive.set( 0x000000 );
-  
+
     //   }
-  
+
     //   selectionBox.startPoint.set(
     //     ( event.clientX / window.innerWidth ) * 2 - 1,
     //     - ( event.clientY / window.innerHeight ) * 2 + 1,
     //     0.5 );
-  
+
     // } );
 
 
@@ -263,11 +267,75 @@ const Canvas = React.forwardRef((props, refs) => {
     renderer.domElement.addEventListener(
       "click",
       () => {
-       
+
       },
       false
     );
-  }
+
+    const selectionBox = new SelectionBox(camera, scene);
+    const selectHelper = new SelectionHelper(renderer, controls, 'selectBox');
+
+
+    document.addEventListener( 'pointerdown', function ( event ) {
+
+      for ( const item of selectionBox.collection ) {
+
+        item.material.emissive?.set( 0x000000 );
+
+      }
+
+      selectionBox.startPoint.set(
+        ( event.clientX / window.innerWidth ) * 2 - 1,
+        - ( event.clientY / window.innerHeight ) * 2 + 1,
+        0.5 );
+
+    } );
+
+    document.addEventListener( 'pointermove', function ( event ) {
+
+      if ( helper.isDown ) {
+
+        for ( let i = 0; i < selectionBox.collection.length; i ++ ) {
+
+          selectionBox.collection[ i ].material.emissive.set( 0x000000 );
+
+        }
+
+        selectionBox.endPoint.set(
+          ( event.clientX / window.innerWidth ) * 2 - 1,
+          - ( event.clientY / window.innerHeight ) * 2 + 1,
+          0.5 );
+
+        const allSelected = selectionBox.select();
+        console.log(allSelected)
+        for ( let i = 0; i < allSelected.length; i ++ ) {
+
+          allSelected[ i ].material.emissive.set( 0xffffff );
+
+        }
+
+      }
+
+    } );
+
+    document.addEventListener( 'pointerup', function ( event ) {
+
+      selectionBox.endPoint.set(
+        ( event.clientX / window.innerWidth ) * 2 - 1,
+        - ( event.clientY / window.innerHeight ) * 2 + 1,
+        0.5 );
+
+      const allSelected = selectionBox.select();
+      console.log(allSelected)
+      for ( let i = 0; i < allSelected.length; i ++ ) {
+
+        allSelected[ i ].material.emissive?.set( 0xffffff );
+
+      }
+
+    } );
+    
+  } 
   //   初始化座椅
   function initSet() {
     const numParticles = AMOUNTX * AMOUNTY;
@@ -399,7 +467,7 @@ const Canvas = React.forwardRef((props, refs) => {
   function animate() {
     animationRequestId = requestAnimationFrame(animate);
     const date = new Date().getTime();
-   
+
     render();
   }
 
@@ -433,7 +501,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
     let k = 0,
       l = 0;
-   
+
     for (let ix = 0; ix < AMOUNTX1; ix++) {
       for (let iy = 0; iy < AMOUNTY1; iy++) {
         const value = bigArrg1[l] * 10;
@@ -443,7 +511,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
         positions1[k + 1] = smoothBig1[l] / value2; // y
         const rgb = jet(0, valuej2, smoothBig1[l]);
-  
+
         colors1[k] = rgb[0] / 255;
         colors1[k + 1] = rgb[1] / 255;
         colors1[k + 2] = rgb[2] / 255;
@@ -577,7 +645,7 @@ const Canvas = React.forwardRef((props, refs) => {
   }
   // 座椅数据
   function sitValue(prop) {
-  
+
     const { valuej, valueg, value, valuel, valuef, valuelInit } = prop;
     if (valuej) valuej1 = valuej;
     if (valueg) valueg1 = valueg;
@@ -591,7 +659,7 @@ const Canvas = React.forwardRef((props, refs) => {
     if (ndata1Num < valuelInit1) {
       ndata1 = new Array(sitnum1 * sitnum2).fill(0);
     }
-   
+
   }
   function sitData(prop) {
 
@@ -609,7 +677,7 @@ const Canvas = React.forwardRef((props, refs) => {
       valuef,
       valuelInit,
     } = prop;
-  
+
     // valuej1 = valuej;
     // valueg1 = valueg;
     // value1 = value;
@@ -627,7 +695,7 @@ const Canvas = React.forwardRef((props, refs) => {
     if (ndata1Num < valuelInit) {
       ndata1 = new Array(sitnum1 * sitnum2).fill(0);
     }
-    
+
   }
 
   function changeGroupRotate(obj) {
@@ -641,7 +709,7 @@ const Canvas = React.forwardRef((props, refs) => {
   }
 
   function reset() {
-    
+
     camera.position.z = 300;
     camera.position.y = 200;
     camera.position.x = 0;
@@ -696,7 +764,7 @@ const Canvas = React.forwardRef((props, refs) => {
       controls.keys = null
     }
   }
-  
+
   // 按键放开事件处理函数
   function onKeyUp(event) {
     if (event.key === 'Shift') {
@@ -715,7 +783,7 @@ const Canvas = React.forwardRef((props, refs) => {
     }
   }
 
- 
+
 
 
 
@@ -731,7 +799,7 @@ const Canvas = React.forwardRef((props, refs) => {
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
-    return () => { 
+    return () => {
       cancelAnimationFrame(animationRequestId);
     };
   }, []);
