@@ -19,6 +19,21 @@ const navItems = [
   },
 ];
 
+const carItems = [
+  {
+    label: '整体',
+    key: 'all',
+  },
+  {
+    label: '靠背',
+    key: 'back',
+  },
+  {
+    label: '座椅',
+    key: 'sit',
+  },
+];
+
 const sitItems = [
   {
     label: <a href="https://www.antgroup.com">1st menu item</a>,
@@ -53,7 +68,8 @@ const Title = (props) => {
   const [valuef1, setValuef1] = useState(2)
   const [value1, setValue1] = useState(2)
   const [valuelInit1, setValuelInit1] = useState(2)
-
+  const [current, setCurrent] = useState('now');
+  const [carCurrent, setCarCurrent] = useState('all');
 
   const onChange = (value) => {
     console.log(`selected ${value}`);
@@ -61,7 +77,7 @@ const Title = (props) => {
   const onSearch = (value) => {
     console.log('search:', value);
   };
-  const [current, setCurrent] = useState('now');
+
   const onClick = (e) => {
     console.log('click ', e.key);
     if (e.key === 'now') {
@@ -72,18 +88,32 @@ const Title = (props) => {
     }
     setCurrent(e.key);
   };
+
+  const onCarClick = (e) => {
+    if (e.key === 'sit') {
+      setCarCurrent('sit')
+      props.com.current?.actionSit()
+    } else if (e.key === 'back') {
+      setCarCurrent('back')
+      props.com.current?.actionBack()
+    } else {
+      setCarCurrent('all')
+      props.com.current?.actionAll()
+    }
+  }
   return <div className="title">
     <h2>bodyta</h2>
     <div className="titleItems">
       <Select
         // value={sensorArr}
+        // defaultValue={'汽车座椅'}
         placeholder="请选择对应传感器"
         onChange={(e) => {
           // props.handleChangeCom(e);
           console.log(e.info);
           props.wsSendObj({ file: e.info })
           props.changeMatrix(e.info)
-          props.changeDateArr(e.info)
+          // props.changeDateArr(e.info)
           // if (ws && ws.readyState === 1)
           //   ws.send(JSON.stringify({ sitPort: e }));
         }}
@@ -126,7 +156,7 @@ const Title = (props) => {
         onChange={(e) => {
           // props.handleChangeCom(e);
           console.log(e);
-          props.wsSendObj({ getTime: e,local: true,  })
+          props.wsSendObj({ getTime: e, index: 0 })
           // props.wsSendObj({port : e})
           // if (ws && ws.readyState === 1)
           //   ws.send(JSON.stringify({ sitPort: e }));
@@ -143,11 +173,15 @@ const Title = (props) => {
         })}
       </Select>}
 
-      {props.matrixName == 'car' ? <div style={{display : 'flex'}}>
-        <div className='aniButton' onClick={() => props.com.current?.actionBack()}>back</div>
-        <div className='aniButton' onClick={() => props.com.current?.actionSit()}>sit</div>
-        <div className='aniButton' onClick={() => props.com.current?.actionAll()}>all</div>
-      </div> : null}
+      {props.matrixName == 'car' ?
+
+        // <div style={{ display: 'flex' }}>
+        //   <div className='aniButton' onClick={() => props.com.current?.actionBack()}>back</div>
+        //   <div className='aniButton' onClick={() => props.com.current?.actionSit()}>sit</div>
+        //   <div className='aniButton' onClick={() => props.com.current?.actionAll()}>all</div>
+        // </div> 
+        <Menu className='menu' onClick={onCarClick} selectedKeys={[carCurrent]} mode="horizontal" items={carItems} />
+        : null}
     </div>
     <div style={{ position: 'relative' }}>
       <img onClick={() => { setShow(!show) }} className='optionImg' src={option} alt="" />

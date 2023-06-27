@@ -16,11 +16,13 @@ import {
   jet,
 } from "../../assets/util/util";
 // import { withData } from "./WithData";
-
+import './index.scss'
 import { obj } from "../../assets/util/config";
+import { getPointCoordinate } from "./threeUtil.js";
 const group = new THREE.Group();
 const sitInit = 0;
 const backInit = 0;
+var newDiv
 var animationRequestId
 const sitnum1 = 16;
 const sitnum2 = 32;
@@ -131,7 +133,9 @@ const Canvas = React.forwardRef((props, refs) => {
 
     camera.position.z = 300;
     camera.position.y = 200;
-    //   camera.position.x = 200;
+    // camera.position.z = 0;
+    // camera.position.y = 50;
+    // camera.position.x = 100;
 
     // scene
 
@@ -210,10 +214,10 @@ const Canvas = React.forwardRef((props, refs) => {
     initSet();
     initBack();
     // scene.add(group);
-    group.rotation.x = -(Math.PI * 2) / 12
+    group.rotation.x = -(Math.PI * 2) / 6
     group.position.x = -15
-    group.position.y = 150
-    group.position.z = 230
+    group.position.y = -600
+    group.position.z = -1000
     scene.add(group);
     const helper = new THREE.GridHelper(2000, 100);
     helper.position.y = -199;
@@ -276,68 +280,92 @@ const Canvas = React.forwardRef((props, refs) => {
     const selectHelper = new SelectionHelper(renderer, controls, 'selectBox');
 
 
-    document.addEventListener( 'pointerdown', function ( event ) {
 
-      for ( const item of selectionBox.collection ) {
 
-        item.material.emissive?.set( 0x000000 );
+    document.addEventListener('pointerdown', function (event) {
+
+      for (const item of selectionBox.collection) {
+
+        item.material.emissive?.set(0x000000);
 
       }
 
       selectionBox.startPoint.set(
-        ( event.clientX / window.innerWidth ) * 2 - 1,
-        - ( event.clientY / window.innerHeight ) * 2 + 1,
-        0.5 );
+        (event.clientX / window.innerWidth) * 2 - 1,
+        - (event.clientY / window.innerHeight) * 2 + 1,
+        0.5);
 
-    } );
+      let arr = getPointCoordinate(particles , camera)
 
-    document.addEventListener( 'pointermove', function ( event ) {
+      newDiv = document.createElement('div');
 
-      if ( helper.isDown ) {
+      newDiv.classList.add('my-class');
+      // 设置 <div> 的属性、内容或样式
+      newDiv.style.backgroundColor = 'lightblue';
+      // newDiv.style.padding = '10px';
+      newDiv.style.width = `${100}px`
+      newDiv.style.height = `${100}px`
+      // newDiv.style.left = `${viewportPosition.x}px`
+      // newDiv.style.top = `${viewportPosition.y}px`
+      // newDiv.style.left = `${vector.x}px`
+      // newDiv.style.top = `${vector.y}px`
+      newDiv.style.left = `${arr[1].x}px`
+      newDiv.style.top = `${arr[1].y}px`
 
-        for ( let i = 0; i < selectionBox.collection.length; i ++ ) {
+      // 将 <div> 元素添加到页面中的某个元素中
+      document.body?.appendChild(newDiv);
 
-          selectionBox.collection[ i ].material.emissive.set( 0x000000 );
+    });
+
+    document.addEventListener('pointermove', function (event) {
+
+      if (helper.isDown) {
+
+        for (let i = 0; i < selectionBox.collection.length; i++) {
+
+          selectionBox.collection[i].material.emissive.set(0x000000);
 
         }
 
         selectionBox.endPoint.set(
-          ( event.clientX / window.innerWidth ) * 2 - 1,
-          - ( event.clientY / window.innerHeight ) * 2 + 1,
-          0.5 );
+          (event.clientX / window.innerWidth) * 2 - 1,
+          - (event.clientY / window.innerHeight) * 2 + 1,
+          0.5);
 
         const allSelected = selectionBox.select();
         console.log(allSelected)
-        for ( let i = 0; i < allSelected.length; i ++ ) {
+        for (let i = 0; i < allSelected.length; i++) {
 
-          allSelected[ i ].material.emissive.set( 0xffffff );
+          allSelected[i].material.emissive.set(0xffffff);
 
         }
 
       }
 
-    } );
+    });
 
-    document.addEventListener( 'pointerup', function ( event ) {
+    document.addEventListener('pointerup', function (event) {
 
       selectionBox.endPoint.set(
-        ( event.clientX / window.innerWidth ) * 2 - 1,
-        - ( event.clientY / window.innerHeight ) * 2 + 1,
-        0.5 );
+        (event.clientX / window.innerWidth) * 2 - 1,
+        - (event.clientY / window.innerHeight) * 2 + 1,
+        0.5);
 
       const allSelected = selectionBox.select();
       console.log(allSelected)
-      for ( let i = 0; i < allSelected.length; i ++ ) {
+      for (let i = 0; i < allSelected.length; i++) {
 
-        allSelected[ i ].material.emissive?.set( 0xffffff );
+        allSelected[i].material.emissive?.set(0xffffff);
 
       }
 
-    } );
-    
-  } 
+    });
+
+  }
   //   初始化座椅
   function initSet() {
+    // const AMOUNTX = 1
+    // const AMOUNTY = 1
     const numParticles = AMOUNTX * AMOUNTY;
     positions = new Float32Array(numParticles * 3);
     scales = new Float32Array(numParticles);
@@ -386,13 +414,55 @@ const Canvas = React.forwardRef((props, refs) => {
     particles.scale.z = 0.0062;
 
 
-    particles.rotation.x = Math.PI / 2;
+    // particles.rotation.x = Math.PI / 2;
     // particles.rotation.y = 0; //-Math.PI / 2;
     // particles.rotation.y = Math.PI 
     // particles.rotation.z = Math.PI
     // scene.add(particles);
     group.add(particles);
 
+
+    // 
+    const position = particles.geometry.attributes.position;
+
+    const screenCoordinates = [];
+    const dataArr = [0, 2879]
+    for (let i = 0; i < dataArr.length; i++) {
+      const vertex = new THREE.Vector3();
+      vertex.fromBufferAttribute(position, dataArr[i]); // 获取顶点的世界坐标
+      const geometry = new THREE.BufferGeometry();
+      const vertices = new Float32Array([vertex.x, vertex.y, vertex.z])
+      const colors = new Float32Array([1, 0, 0])
+      console.log(vertices, 'vertices')
+      geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+      geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      const point = new THREE.Points(geometry, material);
+
+      group.add(point);
+      point.scale.x = 0.0062;
+      point.scale.y = 0.0062;
+      point.scale.z = 0.0062;
+      point.position.x = -15
+      point.position.y = -1000  
+      point.position.z = 230
+
+      const vector = new THREE.Vector3();
+      var widthHalf = 0.5 * window.innerWidth;  //此处应使用画布长和宽
+      var heightHalf = 0.5 * window.innerHeight;
+
+      point.updateMatrixWorld(); // 函数updateMatrix()和updateMatrixWorld(force)将根据position，rotation或quaternion，scale参数更新matrix和matrixWorld。updateMatrixWorld还会更新所有后代元素的matrixWorld，如果force值为真则调用者本身的matrixWorldNeedsUpdate值为真。
+
+      //getPositionFromMatrix()方法已经删除,使用setFromMatrixPosition()替换, setFromMatrixPosition方法将返回从矩阵中的元素得到的新的向量值的向量
+      vector.setFromMatrixPosition(point.matrixWorld);
+
+      //projectOnVector方法在将当前三维向量(x,y,z)投影一个向量到另一个向量,参数vector(x,y,z). 
+      vector.project(camera);
+
+      vector.x = (vector.x * widthHalf) + widthHalf;
+      vector.y = -(vector.y * heightHalf) + heightHalf;
+      console.log(vector.x, vector.y,)
+    }
+    console.log(group)
   }
   // 初始化靠背
   function initBack() {

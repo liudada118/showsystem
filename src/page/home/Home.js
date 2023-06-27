@@ -13,10 +13,12 @@ import icon2 from '../../assets/images/Icon_2.png'
 import icon3 from '../../assets/images/Icon_3.png'
 import load from '../../assets/images/load.png'
 import stop from '../../assets/images/stop.png'
+import play from '../../assets/images/play.png'
+import pause from '../../assets/images/pause.png'
 import { findMax, findMin, } from '../../assets/util/util'
 import { rainbowColors, rainbowTextColors } from "../../assets/util/color";
 import { handLine, footLine } from '../../assets/util/line';
-import { Slider } from 'antd'
+import { Select, Slider } from 'antd'
 let ws, xvalue = 0, yvalue = 0
 
 class Com extends React.Component {
@@ -52,6 +54,7 @@ export default function Home() {
   const [local, setLocal] = useState(false)
   const [dataArr, setDataArr] = useState([])
   const [index, setIndex] = useState(0)
+  const [playflag, setPlayflag] = useState(false)
   const [time, setTime] = useState([])
   const [xdata, setXdata] = useState(0)
   useEffect(() => {
@@ -64,24 +67,6 @@ export default function Home() {
       let jsonObject = JSON.parse(e.data);
       //处理空数组
 
-      // if (jsonObject.backData != null) {
-      //   this.setState({
-      //     renderFlag: true,
-      //   });
-
-      //   let wsPointData = jsonObject.backData;
-
-      //   if (!Array.isArray(wsPointData)) {
-      //     console.log(wsPointData);
-      //     wsPointData = JSON.parse(JSON.parse(wsPointData));
-      //   }
-
-      //   com.current?.backData({
-      //     wsPointData: wsPointData,
-      //   });
-
-      // }
-
       if (jsonObject.sitData != null) {
 
         let wsPointData = jsonObject.sitData;
@@ -89,41 +74,6 @@ export default function Home() {
         if (!Array.isArray(wsPointData)) {
           wsPointData = JSON.parse(wsPointData);
         }
-
-
-        // for (let i = 0; i < 8; i++) {
-        //   for (let j = 0; j < 32; j++) {
-        //     [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
-        //       wsPointData[(15 - i) * 32 + j],
-        //       wsPointData[i * 32 + j],
-        //     ];
-        //   }
-        // }
-
-
-        // let b = wsPointData.splice(0, 16 * 32)
-        // wsPointData = wsPointData.concat(b)
-
-        // for (let i = 0; i < 32; i++) {
-        //   for (let j = 0; j < 8; j++) {
-        //     [wsPointData[i * 32 + j], wsPointData[(i) * 32 + 15 - j]] = [
-        //       wsPointData[(i) * 32 + 15 - j],
-        //       wsPointData[i * 32 + j],
-        //     ];
-        //   }
-        // }
-
-        // let sitData = [],
-        //   backData = [];
-        // for (let i = 0; i < 32; i++) {
-        //   for (let j = 0; j < 32; j++) {
-        //     if (j < 16) {
-        //       sitData.push(wsPointData[i * 32 + j]);
-        //     } else {
-        //       backData.push(wsPointData[i * 32 + j]);
-        //     }
-        //   }
-        // }
 
         if (wsMatrixName == 'foot') {
           const { sitData, backData } = footLine(wsPointData)
@@ -136,9 +86,7 @@ export default function Home() {
             wsPointData: backData,
           });
         } else {
-          // console.log('hand')
           wsPointData = handLine(wsPointData)
-          // console.log(wsPointData.length)
           com.current?.sitData({
             wsPointData: wsPointData,
           });
@@ -178,6 +126,14 @@ export default function Home() {
       if (jsonObject.time != null) {
         setTime(jsonObject.time)
       }
+      if (jsonObject.timeArr != null) {
+        // const arr = []
+        const arr = jsonObject.timeArr.map((a, index) => a.date)
+        setDataArr(arr)
+      }
+      if (jsonObject.index != null) {
+        setIndex(jsonObject.index)
+      }
 
     };
     ws.onerror = (e) => {
@@ -186,19 +142,6 @@ export default function Home() {
     ws.onclose = (e) => {
       // connection closed
     };
-
-
-
-    // document.getElementById("fileInput").addEventListener("change", function (event) {
-    //   const file = event.target.files[0];
-    //   const reader = new FileReader();
-    //   reader.onload = function (e) {
-    //     const contents = e.target.result;
-    //     // 在这里可以对文件内容进行处理
-    //     console.log(contents);
-    //   };
-    //   reader.readAsText(file);
-    // });
 
   }, [])
 
@@ -243,10 +186,27 @@ export default function Home() {
       }
     }
 
+    if (obj.speed) {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ speed: obj.speed }));
+      }
+    }
+
+    if (obj.index != null) {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ index: obj.index }));
+      }
+    }
+
 
   }
 
-
+  const playData = (value) => {
+    if (ws && ws.readyState === 1) {
+      ws.send(JSON.stringify({ play: value }));
+      setPlayflag(value)
+    }
+  }
 
   const changeMatrix = (e) => {
     console.log(e)
@@ -272,10 +232,15 @@ export default function Home() {
 
   const changeLocal = (value) => {
     setLocal(value)
-    changeDateArr(matrixName)
+    // changeDateArr(matrixName)
 
     if (ws && ws.readyState === 1) {
-      ws.send(JSON.stringify({ local: true }));
+      if (value) {
+        ws.send(JSON.stringify({ local: true }));
+      } else {
+        ws.send(JSON.stringify({ local: false }));
+      }
+
     }
   }
 
@@ -428,36 +393,72 @@ export default function Home() {
         wsSendObj={wsSendObj}
         changeMatrix={changeMatrix}
         changeLocal={changeLocal}
-        changeDateArr={changeDateArr}
+      // changeDateArr={changeDateArr}
       />
       <Aside ref={data} />
       {matrixName == 'foot' ? <Canvas ref={com} /> : matrixName == 'hand' ? <CanvasHand ref={com} /> : <CanvasCar ref={com} />}
 
-      {local ? <div style={{ position: "fixed", bottom: 0, width: '80%' }}>
-        <Slider
-          tooltip={{
-            formatter,
-          }}
-          min={0}
-          max={length - 2}
-          onChange={(value) => {
-            localStorage.setItem("localValuej", value);
-            console.log(value)
-            setIndex(value)
-            if (ws && ws.readyState === 1) {
-              // console.log(ws)
-              ws.send(value)
-            }
-            //   can3.5pvas.valuej = value
-          }}
-          // value={index}
-          value={index}
+      {local ?
+        <div style={{ position: "fixed", bottom: 0, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ width: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', position: 'relative' }}>
+            <Slider
+              tooltip={{
+                formatter,
+              }}
 
-          step={1}
-          // value={}
-          style={{ flex: 1 }}
-        />
-      </div> : null}
+              min={0}
+              max={length - 2}
+              onChange={(value) => {
+                localStorage.setItem("localValuej", value);
+                console.log(value)
+                setIndex(value)
+                if (ws && ws.readyState === 1) {
+                  ws.send(JSON.stringify({ value }))
+                }
+              }}
+              value={index}
+              step={1}
+              style={{ width: '100%' }}
+            />
+            <div>
+              <img src={play} style={{ width: '50px', display: playflag ? 'none' : 'unset' }}
+                onClick={() => { playData(true) }}
+                alt="" />
+              <img src={pause} style={{ width: '50px', display: playflag ? 'unset' : 'none' }}
+                onClick={() => { playData(false) }}
+                alt="" />
+              <div style={{ position: 'absolute', bottom: 0, right: '20%' }}>
+                <Select
+                  defaultValue="1.0X"
+                  style={{
+                    width: 80,
+                  }}
+                  onChange={(e) => {
+                    console.log(e)
+                    wsSendObj({ speed: e })
+                  }}
+
+                  dropdownMatchSelectWidth={false}
+                  placement={'topLeft'}
+                  options={[
+                    {
+                      value: 1,
+                      label: '1.0X',
+                    },
+                    {
+                      value: 1.5,
+                      label: '1.5X',
+                    },
+                    {
+                      value: 2,
+                      label: '2.0X',
+                    },
+                  ]}
+                />
+              </div>
+            </div>
+          </div>
+        </div> : null}
     </div>
   )
 }
