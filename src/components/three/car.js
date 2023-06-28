@@ -16,9 +16,10 @@ import {
 import { obj } from "../../assets/util/config";
 import { SelectionBox } from "./SelectionBox";
 import { SelectionHelper } from "./SelectionHelper";
-import { checkRectIndex, checkRectangleIntersection, getPointCoordinate ,getPointCoordinateback } from "./threeUtil1";
+import { checkRectIndex, checkRectangleIntersection, getPointCoordinate, getPointCoordinateback } from "./threeUtil1";
 import { getPointCoordinate1 } from "./threeUtil2";
-var newDiv, newDiv1, selectStartArr = [], selectEndArr = [], sitArr, backArr,sitMatrix=[],backMatrix=[],selectMatrix=[]
+var newDiv, newDiv1, selectStartArr = [], selectEndArr = [], sitArr, backArr, sitMatrix = [], backMatrix = [], selectMatrix = []
+let sitindexArr, backIndexArr
 const group = new THREE.Group();
 const sitInit = 0;
 const backInit = 0;
@@ -211,11 +212,11 @@ const Canvas = React.forwardRef((props, refs) => {
 
     document.addEventListener('pointerdown', function (event) {
 
-   
-      selectStartArr = [(event.clientX) , event.clientY  ]
+
+      selectStartArr = [(event.clientX), event.clientY]
 
       sitArr = getPointCoordinate({ particles, camera, position: { x: -10, y: -20, z: 0 } })
-      backArr = getPointCoordinateback({ particles: particles1, camera, position: { x: -10, y: -20, z: 0 } ,width : AMOUNTX1})
+      backArr = getPointCoordinateback({ particles: particles1, camera, position: { x: -10, y: -20, z: 0 }, width: AMOUNTX1 })
 
       // newDiv = document.createElement('div');
 
@@ -235,30 +236,30 @@ const Canvas = React.forwardRef((props, refs) => {
       // // 将 <div> 元素添加到页面中的某个元素中
       // document.body?.appendChild(newDiv);
 
-      sitMatrix = [sitArr[0].x , sitArr[0].y , sitArr[1].x , sitArr[1].y]
-      backMatrix = [backArr[1].x , backArr[1].y, backArr[0].x , backArr[0].y ]
+      sitMatrix = [sitArr[0].x, sitArr[0].y, sitArr[1].x, sitArr[1].y]
+      backMatrix = [backArr[1].x, backArr[1].y, backArr[0].x, backArr[0].y]
     });
 
     document.addEventListener('pointermove', function (event) {
-      selectEndArr = [(event.clientX) , event.clientY  ,]
-      
-      selectMatrix = [...selectStartArr ,...selectEndArr]
-     
+      selectEndArr = [(event.clientX), event.clientY,]
 
-      const sitInterArr = checkRectangleIntersection(selectMatrix , sitMatrix)
-      const backInterArr = checkRectangleIntersection(selectMatrix , backMatrix)
-      let sitindexArr ,backIndexArr
-     if(sitInterArr) sitindexArr = checkRectIndex(sitMatrix , sitInterArr ,AMOUNTX , AMOUNTY)
-     if(backInterArr) backIndexArr = checkRectIndex(backMatrix , backInterArr ,AMOUNTX1 , AMOUNTY1)
+      selectMatrix = [...selectStartArr, ...selectEndArr]
+
+
+      const sitInterArr = checkRectangleIntersection(selectMatrix, sitMatrix)
+      const backInterArr = checkRectangleIntersection(selectMatrix, backMatrix)
+
+      if (sitInterArr) sitindexArr = checkRectIndex(sitMatrix, sitInterArr, AMOUNTX, AMOUNTY)
+      if (backInterArr) backIndexArr = checkRectIndex(backMatrix, backInterArr, AMOUNTX1, AMOUNTY1)
       // console.log(sitMatrix ,backMatrix ,selectMatrix)
-      console.log(sitindexArr , backIndexArr)
+      console.log(sitindexArr, backIndexArr)
     });
 
-    document.addEventListener( 'pointerup', function ( event ) {
+    document.addEventListener('pointerup', function (event) {
       selectStartArr = []
       selectEndArr = []
 
-    } );
+    });
 
   }
   //   初始化座椅
@@ -584,7 +585,18 @@ const Canvas = React.forwardRef((props, refs) => {
         smoothBig1[l] = smoothBig1[l] + (value - smoothBig1[l] + 0.5) / valuel2;
 
         positions1[k + 1] = smoothBig1[l] / value2; // y
-        const rgb = jetWhite2(0, valuej2, smoothBig1[l]);
+        let rgb
+        if (backIndexArr && !backIndexArr.every((a) => a == 0)) {
+       
+          if (ix >=  backIndexArr[0] && ix < backIndexArr[1] && iy < AMOUNTY1 - backIndexArr[2] && iy > AMOUNTY1 - backIndexArr[3]) {
+            rgb = [255, 0, 0];
+          }else{
+            rgb = jetWhite2(0, valuej2, smoothBig1[l]);
+          }
+        } else {
+          rgb = jetWhite2(0, valuej2, smoothBig1[l]);
+        }
+
 
         colors1[k] = rgb[0] / 255;
         colors1[k + 1] = rgb[1] / 255;

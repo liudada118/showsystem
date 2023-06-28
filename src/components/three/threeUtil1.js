@@ -161,10 +161,10 @@ export function checkRectIndex(rectmax, rectmin, width, height) {
     const rectHeight = y2_1 - y1_1
     const rectWidth = x2_1 - x1_1
     const startPointX = (x1_2 - x1_1) / rectWidth * width
-    const pointLengthX = (x2_2 - x1_2) / rectWidth * width
+    const pointLengthX = (x2_2 - x1_1) / rectWidth * width
     const startPointY = (y1_2 - y1_1) / rectHeight * height
-    const pointLengthY = (y2_2 - y1_2) / rectHeight * height
+    const pointLengthY = (y2_2 - y1_1) / rectHeight * height
     console.log(rectmin, 'rectmin')
-    return [startPointX, pointLengthX, startPointY, pointLengthY]
+    return [startPointX, pointLengthX, startPointY, pointLengthY].map((a) =>  Math.round(a))
     // console.log(startPointX,pointLengthX,startPointY,pointLengthY)
 }
