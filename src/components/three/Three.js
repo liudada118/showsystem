@@ -133,7 +133,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
     camera.position.z = 300;
     camera.position.y = 200;
-    // camera.position.z = 0;
+    // camera.position.z = 1;
     // camera.position.y = 50;
     // camera.position.x = 100;
 
@@ -214,10 +214,10 @@ const Canvas = React.forwardRef((props, refs) => {
     initSet();
     initBack();
     // scene.add(group);
-    group.rotation.x = -(Math.PI * 2) / 6
+    group.rotation.x = Math.PI / 3
     group.position.x = -15
-    group.position.y = -600
-    group.position.z = -1000
+    group.position.y = 150
+    group.position.z = 230
     scene.add(group);
     const helper = new THREE.GridHelper(2000, 100);
     helper.position.y = -199;
@@ -284,6 +284,8 @@ const Canvas = React.forwardRef((props, refs) => {
 
     document.addEventListener('pointerdown', function (event) {
 
+      console.log(camera.position , camera.rotation)
+
       for (const item of selectionBox.collection) {
 
         item.material.emissive?.set(0x000000);
@@ -295,7 +297,7 @@ const Canvas = React.forwardRef((props, refs) => {
         - (event.clientY / window.innerHeight) * 2 + 1,
         0.5);
 
-      let arr = getPointCoordinate(particles , camera)
+      let arr = getPointCoordinate({particles, camera})
 
       newDiv = document.createElement('div');
 
@@ -414,7 +416,7 @@ const Canvas = React.forwardRef((props, refs) => {
     particles.scale.z = 0.0062;
 
 
-    // particles.rotation.x = Math.PI / 2;
+    // particles.rotation.x = Math.PI / 4;
     // particles.rotation.y = 0; //-Math.PI / 2;
     // particles.rotation.y = Math.PI 
     // particles.rotation.z = Math.PI
@@ -443,7 +445,7 @@ const Canvas = React.forwardRef((props, refs) => {
       point.scale.y = 0.0062;
       point.scale.z = 0.0062;
       point.position.x = -15
-      point.position.y = -1000  
+      point.position.y = -1000
       point.position.z = 230
 
       const vector = new THREE.Vector3();
@@ -515,7 +517,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
 
     particles1.position.x = 30;
-    particles1.rotation.x = Math.PI / 2
+    // particles1.rotation.x = Math.PI / 2
     // particles1.rotation.y = Math.PI 
     // particles1.rotation.z = Math.PI
     // scene.add(particles1);
@@ -871,6 +873,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
     return () => {
       cancelAnimationFrame(animationRequestId);
+      document.removeEventListener('pointerdown' , function(){})
     };
   }, []);
   return (

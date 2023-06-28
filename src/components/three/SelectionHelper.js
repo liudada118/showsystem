@@ -7,7 +7,7 @@ class SelectionHelper {
 
 
 
-	constructor(renderer, controls, cssClassName) {
+	constructor(renderer, controls, cssClassName, controlsFlag) {
 
 		this.element = document.createElement('div');
 		this.element.classList.add(cssClassName);
@@ -20,6 +20,7 @@ class SelectionHelper {
 		this.pointBottomRight = new Vector2();
 		this.isShiftPressed = false;
 		this.isDown = false;
+		this.controlsFlag = controlsFlag
 		// console.log(controls , this.controls)
 		this.onPointerDown = function (event) {
 
@@ -46,33 +47,19 @@ class SelectionHelper {
 		}.bind(this);
 
 		this.onKeyDown = function (event) {
+
 			if (event.key === 'Shift') {
-				// enableControls = false;
 				this.isShiftPressed = true;
-				// this.controls.mouseButtons = {
-				// LEFT: null, // make pan the default instead of rotate
-				// MIDDLE:null,
-				// RIGHT: null,
-				// };
-				this.controls.keys = []
+				this.controlsFlag(false)
 			}
 		}.bind(this)
 
 		// 按键放开事件处理函数
 		this.onKeyUp = function (event) {
 			if (event.key === 'Shift') {
-				// enableControls = true;
+				this.controlsFlag(true)
 				this.isShiftPressed = false;
-				this.controls.mouseButtons = {
-					LEFT: THREE.MOUSE.PAN, // make pan the default instead of rotate
-					MIDDLE: THREE.MOUSE.ZOOM,
-					RIGHT: THREE.MOUSE.ROTATE,
-				};
-				this.controls.keys = [
-					ALT_KEY, // orbit
-					CTRL_KEY, // zoom
-					CMD_KEY, // pan
-				];
+
 			}
 		}.bind(this)
 

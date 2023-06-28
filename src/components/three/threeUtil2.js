@@ -1,25 +1,25 @@
 import * as THREE from "three";
 
-export function getPointCoordinate({particles, camera} ) {
+export function getPointCoordinate1({ particles, camera, position }) {
     const positions = particles.geometry.attributes.position;
-    console.log(particles.position , particles.scale , particles.rotation,positions)
+    console.log(particles.position, particles.scale, particles.rotation, positions)
     const screenCoordinates = [];
-    const dataArr = [0, positions.count -1]
+    const dataArr = [0, positions.count - 1]
     for (let i = 0; i < dataArr.length; i++) {
         const vertex = new THREE.Vector3();
         vertex.fromBufferAttribute(positions, dataArr[i]); // 获取顶点的世界坐标
         const geometry = new THREE.BufferGeometry();
         const vertices = new THREE.Vector3(vertex.x, vertex.y, vertex.z)
-      
+
         console.log(vertices)
 
         // 旋转角度
         let center = new THREE.Vector3(vertex.x, vertex.y, 0);
         const newVertices = vertices.clone()
-        console.log(center)
-        newVertices.sub(center);  
+        // console.log(center)
+        newVertices.sub(center);
         const axis = new THREE.Vector3(1, 0, 0); // 旋转轴，这里使用 Y 轴作为示例
-        const angle = Math.PI / 3; // 旋转角度，这里使用 90 度作为示例
+        const angle = particles.rotation.x; // 旋转角度，这里使用 90 度作为示例
 
         const quaternion = new THREE.Quaternion().setFromAxisAngle(axis, angle);
         newVertices.applyQuaternion(quaternion);
@@ -27,7 +27,7 @@ export function getPointCoordinate({particles, camera} ) {
 
         // console.log(newVertices)
 
-        console.log(newVertices, 'vertices')
+        // console.log(newVertices, 'vertices') 
         geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
         const material = new THREE.PointsMaterial({ color: 0xff0000 });
         const point = new THREE.Points(geometry, material);
@@ -37,14 +37,14 @@ export function getPointCoordinate({particles, camera} ) {
         point.scale.z = particles.scale.z;
 
         if (i == 0) {
-            point.position.x = -15 - 2000 * 0.0062
-            point.position.y = 150 + (newVertices.y - vertices.y)* 0.0062
-            point.position.z = 230 - 3600 * 0.0062 + (newVertices.z - vertices.z)* 0.0062
+            point.position.x = 1 + position.x + vertices.x * 0.0062
+            point.position.y = 105 + position.y + (newVertices.y - vertices.y) * 0.0062
+            point.position.z = 123 + position.z + vertices.z * 0.0062 + (newVertices.z - vertices.z) * 0.0062
 
         } else {
-            point.position.x = -15 + 1900 * 0.0062
-            point.position.y = 150 + (newVertices.y - vertices.y)* 0.0062
-            point.position.z = 230 + 3500 * 0.0062 + (newVertices.z - vertices.z)* 0.0062
+            point.position.x = 1 + position.x + vertices.x * 0.0062
+            point.position.y = 105 + position.y + (newVertices.y - vertices.y) * 0.0062
+            point.position.z = 123 + position.z + vertices.z * 0.0062 + (newVertices.z - vertices.z) * 0.0062
 
         }
 
@@ -62,7 +62,7 @@ export function getPointCoordinate({particles, camera} ) {
 
         vector.x = (vector.x * widthHalf) + widthHalf;
         vector.y = -(vector.y * heightHalf) + heightHalf;
-        console.log(vector.x, vector.y,)
+        // console.log(vector.x, vector.y,)
         screenCoordinates.push(vector)
     }
     return screenCoordinates
