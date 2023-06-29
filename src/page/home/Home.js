@@ -3,7 +3,7 @@ import Title from '../../components/title/Title'
 import './index.scss'
 import Canvas from '../../components/three/Three'
 import CanvasHand from '../../components/three/hand'
-import CanvasCar from '../../components/three/car'
+import CanvasCar from '../../components/three/carnewTest'
 import Aside from '../../components/aside/Aside'
 import plus from '../../assets/images/Plus.png'
 import minus from '../../assets/images/Minus.png'
@@ -17,7 +17,7 @@ import play from '../../assets/images/play.png'
 import pause from '../../assets/images/pause.png'
 import { findMax, findMin, } from '../../assets/util/util'
 import { rainbowColors, rainbowTextColors } from "../../assets/util/color";
-import { handLine, footLine } from '../../assets/util/line';
+import { handLine, footLine, carSitLine } from '../../assets/util/line';
 import { Select, Slider } from 'antd'
 let ws, xvalue = 0, yvalue = 0
 
@@ -75,7 +75,7 @@ export default function Home() {
           wsPointData = JSON.parse(wsPointData);
         }
 
-        if (wsMatrixName == 'foot') {
+        if (matrixName == 'foot') {
           const { sitData, backData } = footLine(wsPointData)
           com.current?.changeDataFlag();
           com.current?.sitData({
@@ -85,12 +85,18 @@ export default function Home() {
           com.current?.backData({
             wsPointData: backData,
           });
-        } else {
+        } else if(matrixName == 'hand'){
           wsPointData = handLine(wsPointData)
           com.current?.sitData({
             wsPointData: wsPointData,
           });
 
+        }else if(matrixName == 'car'){
+          wsPointData = carSitLine(wsPointData)
+          com.current?.sitData({
+            wsPointData: wsPointData,
+          });
+          // com.current?.sitRenew(wsPointData);
         }
 
 
@@ -157,11 +163,18 @@ export default function Home() {
       }
     }
 
-    if (obj.port) {
+    if (obj.sitPort) {
       if (ws && ws.readyState === 1) {
-        ws.send(JSON.stringify({ sitPort: obj.port }));
+        ws.send(JSON.stringify({ sitPort: obj.sitPort }));
       }
     }
+
+    if (obj.backPort) {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ backPort: obj.backPort }));
+      }
+    }
+
     if (obj.flag) {
       if (ws && ws.readyState === 1) {
         ws.send(JSON.stringify({ flag: obj.flag }));

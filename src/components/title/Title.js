@@ -130,13 +130,14 @@ const Title = (props) => {
       </Select>
 
       <Menu className='menu' onClick={onClick} selectedKeys={[current]} mode="horizontal" items={navItems} />
-      {!props.local ? <Select
+      {!props.local ? <><Select
         value={props.portname}
-        placeholder={!props.local ? "请选择对应选项" : "请选择回放数据时间"}
+        style={{marginRight : 20}}
+        placeholder={"请选择座椅串口"}
         onChange={(e) => {
           // props.handleChangeCom(e);
           console.log(e);
-          props.wsSendObj({ port: e })
+          props.wsSendObj({ sitPort: e })
           // if (ws && ws.readyState === 1)
           //   ws.send(JSON.stringify({ sitPort: e }));
         }}
@@ -150,9 +151,33 @@ const Title = (props) => {
             />
           );
         })}
-      </Select> : <Select
+      </Select>
+
+      <Select
+        value={props.portname}
+        placeholder={"请选择靠背串口"}
+        onChange={(e) => {
+          // props.handleChangeCom(e);
+          console.log(e);
+          props.wsSendObj({ backPort: e })
+          // if (ws && ws.readyState === 1)
+          //   ws.send(JSON.stringify({ sitPort: e }));
+        }}
+      >
+        {props.port.map((el) => {
+          return (
+            <Select.Option
+              key={el.path}
+              label={el.path}
+              value={el.path}
+            />
+          );
+        })}
+      </Select>
+      
+      </> : <Select
         value={props.dataArr}
-        placeholder={!props.local ? "请选择对应选项" : "请选择回放数据时间"}
+        placeholder={"请选择回放数据时间"}
         onChange={(e) => {
           // props.handleChangeCom(e);
           console.log(e);

@@ -1,4 +1,4 @@
-export function footLine(wsPointData , flag) {
+export function footLine(wsPointData, flag) {
 
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 32; j++) {
@@ -34,7 +34,7 @@ export function footLine(wsPointData , flag) {
         rowArr.push(rowtotal)
     }
 
-    if(flag){
+    if (flag) {
         wsPointData = press(wsPointData)
     }
 
@@ -54,7 +54,7 @@ export function footLine(wsPointData , flag) {
 
 }
 
-export function handLine(arr , flag) {
+export function handLine(arr, flag) {
     let wsPointData = [...arr]
     // let b = wsPointData.splice(0, 17 * 32)
     // wsPointData = wsPointData.concat(b)
@@ -77,7 +77,7 @@ export function handLine(arr , flag) {
         }
     }
 
-    if(flag){
+    if (flag) {
         wsPointData = press(wsPointData)
     }
 
@@ -130,7 +130,7 @@ function calculateY(x) {
 
     return y;
 }
-   
+
 
 export function press(arr) {
     let wsPointData = [...arr]
@@ -152,5 +152,53 @@ export function press(arr) {
     //////
 
     // wsPointData = wsPointData.map((a,index) => {return calculateY(a)})
+    return wsPointData
+}
+
+export function carSitLine(arr) {
+    const wsPointData = [...arr]
+    for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 32; j++) {
+            [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
+                wsPointData[(15 - i) * 32 + j],
+                wsPointData[i * 32 + j],
+            ];
+        }
+    }
+
+    for (let i = 0; i < 32; i++) {
+        for (let j = 0; j < 8; j++) {
+            [wsPointData[i * 32 + j + 15], wsPointData[(i) * 32 + 16 - j + 15]] = [
+                wsPointData[(i) * 32 + 16 - j + 15],
+                wsPointData[i * 32 + j + 15],
+            ];
+        }
+    }
+    return wsPointData
+}
+
+export function carBackLine(arr){
+    let  wsPointData = [...arr]
+    for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 32; j++) {
+            [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
+                wsPointData[(15 - i) * 32 + j],
+                wsPointData[i * 32 + j],
+            ];
+        }
+    }
+
+    for (let i = 0; i < 32; i++) {
+        for (let j = 0; j < 8; j++) {
+            [wsPointData[i * 32 + j + 15], wsPointData[(i) * 32 + 16 - j + 15]] = [
+                wsPointData[(i) * 32 + 16 - j + 15],
+                wsPointData[i * 32 + j + 15],
+            ];
+        }
+    }
+
+     let b = wsPointData.splice(0, 16 * 32)
+    // console.log(b,wsPointData)
+    wsPointData = wsPointData.concat(b)
     return wsPointData
 }

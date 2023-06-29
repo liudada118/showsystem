@@ -9,6 +9,7 @@ import {
   addSide,
   gaussBlur_1,
   interp1016,
+  interp,
   jetWhite2,
 } from "../../assets/util/util";
 
@@ -19,20 +20,34 @@ import { SelectionHelper } from "./SelectionHelper";
 import { checkRectIndex, checkRectangleIntersection, getPointCoordinate, getPointCoordinateback } from "./threeUtil1";
 import { getPointCoordinate1 } from "./threeUtil2";
 var newDiv, newDiv1, selectStartArr = [], selectEndArr = [], sitArr, backArr, sitMatrix = [], backMatrix = [], selectMatrix = []
-let sitindexArr, backIndexArr
+let sitIndexArr, backIndexArr
 const group = new THREE.Group();
 const sitInit = 0;
 const backInit = 0;
 var animationRequestId
-const sitnum1 = 10;
-const sitnum2 = 16;
-const sitInterp = 4;
+const sitnum1 = 32;
+const sitnum2 = 32;
+const sitInterp = 2;
 const sitOrder = 4;
-const backnum1 = 10;
-const backnum2 = 12;
-const backInterp = 4;
+const backnum1 = 32;
+const backnum2 = 32;
+const backInterp = 2;
 const backOrder = 4;
 let controlsFlag = true;
+var ndata1 = new Array(sitnum1 * sitnum2).fill(0),ndata = new Array(backnum1 * backnum2).fill(0);
+var valuej1 = 200,
+    valueg1 = 2,
+    value1 = 5,
+    valuel1 = 5,
+    valuef1 = 5,
+    valuej2 = 200,
+    valueg2 = 2,
+    value2 = 5,
+    valuel2 = 5,
+    valuef2 = 5,
+    valuelInit1 = 1,
+    valuelInit2 = 2;
+
 const Canvas = React.forwardRef((props, refs) => {
   let dataFlag = false;
   const changeDataFlag = () => {
@@ -44,7 +59,7 @@ const Canvas = React.forwardRef((props, refs) => {
     material,
     backGeometry,
     sitGeometry,
-    ndata = new Array(backnum1 * backnum2).fill(0),
+    
     bigArr1 = new Array(backnum1 * backInterp * backnum2 * backInterp).fill(1),
     bigArrg1 = new Array(
       (backnum1 * backInterp + 2 * backOrder) *
@@ -62,14 +77,14 @@ const Canvas = React.forwardRef((props, refs) => {
     ndataNum;
 
   let bigArr = new Array(sitnum1 * sitInterp * sitnum2 * sitInterp).fill(1);
-  let bigArrg = new Array((sitnum1 * sitInterp + sitOrder*2) * (sitnum2 * sitInterp + sitOrder*2)).fill(1),
-    bigArrgnew = new Array((sitnum1 * sitInterp + sitOrder*2) * (sitnum2 * sitInterp + sitOrder*2)).fill(1),
-    smoothBig = new Array((sitnum1 * sitInterp + sitOrder*2) * (sitnum2 * sitInterp + sitOrder*2)).fill(1);
+  let bigArrg = new Array((sitnum1 * sitInterp + sitOrder * 2) * (sitnum2 * sitInterp + sitOrder * 2)).fill(1),
+    bigArrgnew = new Array((sitnum1 * sitInterp + sitOrder * 2) * (sitnum2 * sitInterp + sitOrder * 2)).fill(1),
+    smoothBig = new Array((sitnum1 * sitInterp + sitOrder * 2) * (sitnum2 * sitInterp + sitOrder * 2)).fill(1);
   let i = 0;
   let ws,
     wsPointData,
-    ws1,
-    ndata1 = new Array(160).fill(1);
+    ws1
+   
 
   let container, stats;
 
@@ -86,18 +101,7 @@ const Canvas = React.forwardRef((props, refs) => {
   const AMOUNTY1 = backnum2 * backInterp + backOrder * 2;
   const SEPARATION = 100;
   let group = new THREE.Group();
-  let valuej1 = 200,
-    valueg1 = 2,
-    value1 = 5,
-    valuel1 = 5,
-    valuef1 = 5,
-    valuej2 = 200,
-    valueg2 = 2,
-    value2 = 5,
-    valuel2 = 5,
-    valuef2 = 5,
-    valuelInit1 = 1,
-    valuelInit2 = 2;
+  
   let positions1;
   let colors1, scales1;
   let positions;
@@ -211,8 +215,8 @@ const Canvas = React.forwardRef((props, refs) => {
     const selectHelper = new SelectionHelper(renderer, controls, 'selectBox', changeFlag);
 
     document.addEventListener('pointerdown', function (event) {
-
-
+      sitIndexArr = []
+      backIndexArr = []
       selectStartArr = [(event.clientX), event.clientY]
 
       sitArr = getPointCoordinate({ particles, camera, position: { x: -10, y: -20, z: 0 } })
@@ -245,14 +249,15 @@ const Canvas = React.forwardRef((props, refs) => {
 
       selectMatrix = [...selectStartArr, ...selectEndArr]
 
+      if (!controlsFlag) {
+        const sitInterArr = checkRectangleIntersection(selectMatrix, sitMatrix)
+        const backInterArr = checkRectangleIntersection(selectMatrix, backMatrix)
 
-      const sitInterArr = checkRectangleIntersection(selectMatrix, sitMatrix)
-      const backInterArr = checkRectangleIntersection(selectMatrix, backMatrix)
+        if (sitInterArr) sitIndexArr = checkRectIndex(sitMatrix, sitInterArr, AMOUNTX, AMOUNTY)
+        if (backInterArr) backIndexArr = checkRectIndex(backMatrix, backInterArr, AMOUNTX1, AMOUNTY1)
+      }
 
-      if (sitInterArr) sitindexArr = checkRectIndex(sitMatrix, sitInterArr, AMOUNTX, AMOUNTY)
-      if (backInterArr) backIndexArr = checkRectIndex(backMatrix, backInterArr, AMOUNTX1, AMOUNTY1)
-      // console.log(sitMatrix ,backMatrix ,selectMatrix)
-      console.log(sitindexArr, backIndexArr)
+    
     });
 
     document.addEventListener('pointerup', function (event) {
@@ -553,7 +558,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
   //  更新靠背数据
   function backRenew() {
-    interp1016(ndata, bigArr1, backnum1, backnum2, backInterp);
+    interp(ndata, bigArr1, backnum1, backInterp);
     //高斯滤波
 
     let bigarr1 = [];
@@ -618,7 +623,14 @@ const Canvas = React.forwardRef((props, refs) => {
 
   //  更新座椅数据
   function sitRenew() {
-    interp1016(ndata1, bigArr, sitnum1, sitnum2, sitInterp);
+    ndata1 = ndata1.map((a, index) => (a - valuef1 < 0 ? 0 : a ));
+
+    ndata1Num = ndata1.reduce((a, b) => a + b, 0);
+    if (ndata1Num < valuelInit1) {
+      ndata1 = new Array(sitnum1*sitnum2).fill(1);
+    }
+    interp(ndata1, bigArr, sitnum1, sitInterp);
+    // console.log(bigArr.filter((a) => a > 1).length)
     let bigArrs = addSide(
       bigArr,
       sitnum2 * sitInterp,
@@ -648,7 +660,20 @@ const Canvas = React.forwardRef((props, refs) => {
         positions[k] = ix * SEPARATION - (AMOUNTX * SEPARATION) / 2 + ix * 20; // x
         positions[k + 1] = smoothBig[l] / value1; // y
         positions[k + 2] = iy * SEPARATION - (AMOUNTY * SEPARATION) / 2; // z
-        const rgb = jetWhite2(0, valuej1, smoothBig[l]);
+
+        let rgb
+        if (sitIndexArr && !sitIndexArr.every((a) => a == 0)) {
+
+          if (ix >= sitIndexArr[0] && ix < sitIndexArr[1] && iy >= sitIndexArr[2] && iy < sitIndexArr[3]) {
+            rgb = [255, 0, 0];
+          } else {
+            rgb = jetWhite2(0, valuej1, smoothBig1[l]);
+          }
+        } else {
+          rgb = jetWhite2(0, valuej1, smoothBig1[l]);
+        }
+
+        // const rgb = jetWhite2(0, valuej1, smoothBig[l]);
 
         // if (rgb[0] == 255 && rgb[1] == 255 && rgb[0] == 255) {
         //   // console.log(123)
@@ -657,7 +682,7 @@ const Canvas = React.forwardRef((props, refs) => {
         //   positions[k + 2] = 0;
         //   positions[k] = -10000;
         // }
-
+    
         colors[k] = rgb[0] / 255;
         colors[k + 1] = rgb[1] / 255;
         colors[k + 2] = rgb[2] / 255;
@@ -679,6 +704,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
   function render() {
     backRenew();
+
     sitRenew();
     TWEEN.update();
     if (controlsFlag) {
@@ -719,7 +745,8 @@ const Canvas = React.forwardRef((props, refs) => {
     valuelInit2 = valuelInit;
     //处理空数组
     // console.log(ndata)
-    ndata = wsPointData.splice(40, 160);
+    // ndata = wsPointData.splice(40, 160);
+    ndata = wsPointData
     console.log(ndata);
     // 修改线序 坐垫
     ndataNum = ndata.reduce((a, b) => a + b, 0);
@@ -753,12 +780,7 @@ const Canvas = React.forwardRef((props, refs) => {
     if (valuel) valuel1 = valuel;
     if (valuef) valuef1 = valuef;
     if (valuelInit) valuelInit1 = valuelInit;
-    ndata1 = ndata1.map((a, index) => (a - valuef1 < 0 ? 0 : a - valuef1));
-
-    ndata1Num = ndata1.reduce((a, b) => a + b, 0);
-    if (ndata1Num < valuelInit1) {
-      ndata1 = new Array(160).fill(1);
-    }
+    
   }
   function sitData(prop) {
     if (i < 50) {
@@ -775,21 +797,7 @@ const Canvas = React.forwardRef((props, refs) => {
       valuef,
       valuelInit,
     } = prop;
-    valuej1 = valuej;
-    valueg1 = valueg;
-    value1 = value;
-    valuel1 = valuel;
-    valuef1 = valuef;
-    // ndata1 = [];
     ndata1 = wsPointData;
-    valuelInit1 = valuelInit;
-    // 修改线序 坐垫
-    ndata1 = ndata1.map((a, index) => (a - valuef1 < 0 ? 0 : a - valuef1));
-
-    ndata1Num = ndata1.reduce((a, b) => a + b, 0);
-    if (ndata1Num < valuelInit) {
-      ndata1 = new Array(160).fill(1);
-    }
   }
 
   useImperativeHandle(refs, () => ({
@@ -798,6 +806,8 @@ const Canvas = React.forwardRef((props, refs) => {
     changeDataFlag: changeDataFlag,
     sitValue,
     backValue,
+    // backRenew,
+    // sitRenew,
     actionAll: actionAll,
     actionSit: actionSit,
     actionBack: actionBack,

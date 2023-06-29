@@ -53,26 +53,32 @@ export default function Demo() {
 
                 }
 
+               
+
+               
+
                 for (let i = 0; i < 8; i++) {
                     for (let j = 0; j < 32; j++) {
-                        [wsPointData[i * 32 + j], wsPointData[(14 - i) * 32 + j]] = [
-                            wsPointData[(14 - i) * 32 + j],
+                        [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
+                            wsPointData[(15 - i) * 32 + j],
                             wsPointData[i * 32 + j],
                         ];
                     }
                 }
-
-                let b = wsPointData.splice(0, 15 * 32)
-                wsPointData = wsPointData.concat(b)
-
+            
                 for (let i = 0; i < 32; i++) {
                     for (let j = 0; j < 8; j++) {
-                        [wsPointData[i * 32 + j], wsPointData[(i) * 32 + 15 - j]] = [
-                            wsPointData[(i) * 32 + 15 - j],
-                            wsPointData[i * 32 + j],
+                        [wsPointData[i * 32 + j + 15], wsPointData[(i) * 32 + 16 - j + 15]] = [
+                            wsPointData[(i) * 32 + 16 - j + 15],
+                            wsPointData[i * 32 + j + 15],
                         ];
                     }
                 }
+
+                 let b = wsPointData.splice(0, 16 * 32)
+                // console.log(b,wsPointData)
+                wsPointData = wsPointData.concat(b)
+
 
                 let colArr = [], rowArr = []
                 for (let i = 0; i < 32; i++) {
