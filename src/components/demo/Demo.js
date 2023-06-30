@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { findMax } from '../../assets/util/util'
+import { carBackLine } from '../../assets/util/line'
 let data = []
 
 // for (let i = 0; i < 32; i++) {
@@ -44,40 +45,40 @@ export default function Demo() {
             let jsonObject = JSON.parse(e.data);
             //处理空数组
 
-            if (jsonObject.sitData != null) {
-                let wsPointData = jsonObject.sitData;
-                // console.log(wsPointData)
-                if (!Array.isArray(wsPointData)) {
-                    wsPointData = JSON.parse(JSON.parse(wsPointData));
-                    //   console.log(wsPointData)
+            if (jsonObject.backData != null) {
+                let wsPointData = jsonObject.backData;
+                console.log(wsPointData)
+                // if (!Array.isArray(wsPointData)) {
+                //     wsPointData = JSON.parse(JSON.parse(wsPointData));
+                //     //   console.log(wsPointData)
 
-                }
-
-               
+                // }
 
                
 
-                for (let i = 0; i < 8; i++) {
-                    for (let j = 0; j < 32; j++) {
-                        [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
-                            wsPointData[(15 - i) * 32 + j],
-                            wsPointData[i * 32 + j],
-                        ];
-                    }
-                }
+               
+
+                // for (let i = 0; i < 8; i++) {
+                //     for (let j = 0; j < 32; j++) {
+                //         [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
+                //             wsPointData[(15 - i) * 32 + j],
+                //             wsPointData[i * 32 + j],
+                //         ];
+                //     }
+                // }
             
-                for (let i = 0; i < 32; i++) {
-                    for (let j = 0; j < 8; j++) {
-                        [wsPointData[i * 32 + j + 15], wsPointData[(i) * 32 + 16 - j + 15]] = [
-                            wsPointData[(i) * 32 + 16 - j + 15],
-                            wsPointData[i * 32 + j + 15],
-                        ];
-                    }
-                }
+                // for (let i = 0; i < 32; i++) {
+                //     for (let j = 0; j < 8; j++) {
+                //         [wsPointData[i * 32 + j + 15], wsPointData[(i) * 32 + 16 - j + 15]] = [
+                //             wsPointData[(i) * 32 + 16 - j + 15],
+                //             wsPointData[i * 32 + j + 15],
+                //         ];
+                //     }
+                // }
 
-                 let b = wsPointData.splice(0, 16 * 32)
-                // console.log(b,wsPointData)
-                wsPointData = wsPointData.concat(b)
+                //  let b = wsPointData.splice(0, 16 * 32)
+                // // console.log(b,wsPointData)
+                // wsPointData = wsPointData.concat(b)
 
 
                 let colArr = [], rowArr = []
@@ -91,23 +92,24 @@ export default function Demo() {
                     rowArr.push(rowtotal)
                 }
 
+                wsPointData = carBackLine(wsPointData)
 
 
-                for (let i = 1; i < 31; i++) {
-                    if (rowArr[i + 1] > 100 && rowArr[i] < 40 && rowArr[i - 1] > 100) {
-                        for (let j = 0; j < 32; j++) {
-                            wsPointData[i * 32 + j] = parseInt((wsPointData[(i - 1) * 32 + j] + wsPointData[(i + 1) * 32 + j])/2)
-                        }
-                    }
-                }
+                // for (let i = 1; i < 31; i++) {
+                //     if (rowArr[i + 1] > 100 && rowArr[i] < 40 && rowArr[i - 1] > 100) {
+                //         for (let j = 0; j < 32; j++) {
+                //             wsPointData[i * 32 + j] = parseInt((wsPointData[(i - 1) * 32 + j] + wsPointData[(i + 1) * 32 + j])/2)
+                //         }
+                //     }
+                // }
 
-                for(let i = 0; i < 32; i++){
-                    if (colArr[i + 1] > 100 && colArr[i] < 40 && colArr[i - 1] > 100) {
-                        for (let j = 1; j < 31; j++) {
-                            wsPointData[j * 32 + i] = parseInt((wsPointData[(j - 1) * 32 + i] + wsPointData[(j + 1) * 32 + i])/2)
-                        }
-                    }
-                }
+                // for(let i = 0; i < 32; i++){
+                //     if (colArr[i + 1] > 100 && colArr[i] < 40 && colArr[i - 1] > 100) {
+                //         for (let j = 1; j < 31; j++) {
+                //             wsPointData[j * 32 + i] = parseInt((wsPointData[(j - 1) * 32 + i] + wsPointData[(j + 1) * 32 + i])/2)
+                //         }
+                //     }
+                // }
 
 
 

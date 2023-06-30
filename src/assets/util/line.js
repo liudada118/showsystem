@@ -156,7 +156,7 @@ export function press(arr) {
 }
 
 export function carSitLine(arr) {
-    const wsPointData = [...arr]
+    let wsPointData = [...arr]
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 32; j++) {
             [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
@@ -174,11 +174,12 @@ export function carSitLine(arr) {
             ];
         }
     }
+    wsPointData = getLineOk(wsPointData)
     return wsPointData
 }
 
-export function carBackLine(arr){
-    let  wsPointData = [...arr]
+export function carBackLine(arr) {
+    let wsPointData = [...arr]
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 32; j++) {
             [wsPointData[i * 32 + j], wsPointData[(15 - i) * 32 + j]] = [
@@ -197,8 +198,68 @@ export function carBackLine(arr){
         }
     }
 
-     let b = wsPointData.splice(0, 16 * 32)
+    let b = wsPointData.splice(0, 16 * 32)
     // console.log(b,wsPointData)
     wsPointData = wsPointData.concat(b)
+
+    wsPointData = rotateMatrix(wsPointData, 32, 32)
+    wsPointData = getLineOk(wsPointData)
+    return wsPointData
+}
+
+
+function rotateMatrix(matrix, m, n) {
+    const rotatedMatrix = new Array(n);
+
+    for (let i = 0; i < n; i++) {
+        rotatedMatrix[i] = new Array(m);
+        for (let j = 0; j < m; j++) {
+            rotatedMatrix[i][j] = matrix[(m - 1 - j) * n + i];
+        }
+    }
+    const rotatedArray = rotatedMatrix.flat();
+    return rotatedArray;
+}
+
+function getLineOk(arr) {
+    const wsPointData = [...arr]
+    // let colArr = [], rowArr = []
+    // for (let i = 0; i < 32; i++) {
+    //     let coltotal = 0, rowtotal = 0
+    //     for (let j = 0; j < 32; j++) {
+    //         coltotal += wsPointData[j * 32 + i]
+    //         rowtotal += wsPointData[i * 32 + j]
+    //     }
+    //     colArr.push(coltotal)
+    //     rowArr.push(rowtotal)
+    // }
+
+    // for (let i = 1; i < 31; i++) {
+    //     if (rowArr[i + 1] > 70 && rowArr[i] < 40 && rowArr[i - 1] > 70) {
+    //         for (let j = 0; j < 32; j++) {
+    //             wsPointData[i * 32 + j] = parseInt((wsPointData[(i - 1) * 32 + j] + wsPointData[(i + 1) * 32 + j])/2)
+    //         }
+    //     }
+    // }
+
+    // for(let i = 0; i < 32; i++){
+    //     if (colArr[i + 1] > 70 && colArr[i] < 40 && colArr[i - 1] > 70) {
+    //         for (let j = 1; j < 31; j++) {
+    //             wsPointData[i * 32 + j] = parseInt((wsPointData[i * 32 + j + 1] + wsPointData[i * 32 + j - 1])/2)
+    //         }
+    //     }
+    // }
+
+    for (let i = 1; i < 31; i++) {
+        for (let j = 1; j < 31; j++) {
+            if (wsPointData[i * 32 + j] < 10) {
+                if (wsPointData[i * 32 + j + 1] > 10 && wsPointData[i * 32 + j - 1] > 10) {
+                    wsPointData[i * 32 + j] = parseInt((wsPointData[i * 32 + j + 1] + wsPointData[i * 32 + j - 1]) / 2)
+                } else if (wsPointData[(i + 1) * 32 + j] > 10 && wsPointData[(i - 1) * 32 + j] > 10) {
+                    wsPointData[i * 32 + j] = parseInt((wsPointData[(i + 1) * 32 + j] + wsPointData[(i - 1) * 32 + j]) / 2)
+                }
+            }
+        }
+    }
     return wsPointData
 }

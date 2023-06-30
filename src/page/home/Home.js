@@ -17,9 +17,46 @@ import play from '../../assets/images/play.png'
 import pause from '../../assets/images/pause.png'
 import { findMax, findMin, } from '../../assets/util/util'
 import { rainbowColors, rainbowTextColors } from "../../assets/util/color";
-import { handLine, footLine, carSitLine } from '../../assets/util/line';
+import { handLine, footLine, carSitLine, carBackLine } from '../../assets/util/line';
 import { Select, Slider } from 'antd'
-let ws, xvalue = 0, yvalue = 0
+import * as echarts from 'echarts'
+let ws, xvalue = 0, yvalue = 0, myChart2 , sitIndexArr = new Array(4).fill(0) , backIndexArr = new Array(4).fill(0) , sitPress= 0 , backPress = 0;
+let backTotal = 0 ,backMean= 0,backMax= 0 ,backMin= 0 , backPoint= 0,backArea= 0,sitTotal= 0 ,sitMean= 0,sitMax= 0 ,sitMin= 0 , sitPoint= 0,sitArea= 0
+
+const dataArr1 = [
+  {
+    color: '#2A99FF',
+    data: '平均压力',
+    eng: 'Mean Pres'
+  }, {
+    color: '#FF2A2A',
+    data: '最大压力',
+    eng: 'Max Pres'
+  }, {
+    color: '#FFA63F',
+    data: '最小压力',
+    eng: 'Min Pres'
+  },
+  {
+    color: '#FFA63F',
+    data: '点数',
+    eng: 'Points'
+  },
+  {
+    color: '#2A99FF',
+    data: '面积',
+    eng: 'Area'
+  }, {
+    color: '#FF2A2A',
+    data: '压强',
+    eng: 'Pressure'
+  }, {
+    color: '#FFA63F',
+    data: '压力标准差',
+    eng: 'Pres Standard'
+  }
+]
+
 
 class Com extends React.Component {
   constructor(props) {
@@ -36,7 +73,92 @@ class Com extends React.Component {
   }
 }
 
-let totalArr = [], wsMatrixName = 'foot'
+let totalArr = [],totalPointArr = [],  wsMatrixName = 'foot'
+
+
+const initCharts1 = (props) => {
+  let option = {
+    animation: false,
+    // tooltip: {
+    //   trigger: "axis",
+    //   show: "true",
+    // },
+    grid: {
+      x: 10,
+      x2: 10,
+      y: 10,
+      y2: 10,
+    },
+    xAxis: {
+      type: "category",
+      show: false,
+      splitLine: {
+        show: false,
+
+      },
+      data: props.xData,
+      axisLabel: {
+        show: false,
+        textStyle: {
+          color: "transparent",
+        },
+      },
+    },
+
+    yAxis: {
+      type: "value",
+      //   splitNumber: 4,
+      show: false,
+      splitLine: {
+        show: false,
+        lineStyle: {
+          //   type: "dotted",
+          color: "rgba(70,132,147,0.5)",
+        },
+      },
+      max: 30000,
+      axisLabel: {
+        show: false,
+        textStyle: {
+          color: "transparent",
+        },
+      },
+    },
+    series: [
+      {
+        symbol: "none",
+        data: props.yData,
+        type: "line",
+        smooth: true,
+        color: "#3591c3",
+
+        itemStyle: {
+          normal: { //颜色渐变函数 前四个参数分别表示四个位置依次为左、下、右、上
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+              offset: 0, color: '#E93CA7' // 0% 处的颜色
+            }, {
+              offset: 0.4, color: '#EA8FC7' // 100% 处的颜色
+            }, {
+              offset: 1, color: '#657BA7' // 100% 处的颜色
+            }]
+            ), //背景渐变色   
+            lineStyle: {        // 系列级个性化折线样式 
+              width: 3,
+              type: 'solid',
+              color: "#E93CA7" //折线的颜色
+            }
+          }
+        },//线条样式
+      },
+
+    ],
+  };
+  option && props.myChart.setOption(option);
+  // console.log(props.myChart.setOption(option))
+  // window.addEventListener("resize", function () {
+  //   props.myChart.resize();
+  // });
+};
 
 export default function Home() {
   const com = useRef()
@@ -57,18 +179,39 @@ export default function Home() {
   const [playflag, setPlayflag] = useState(false)
   const [time, setTime] = useState([])
   const [xdata, setXdata] = useState(0)
+  const [sitArr , setSitArr] = useState([])
+  const [backArr , setBackArr] = useState([])
+
+
   useEffect(() => {
+    myChart2 = echarts.init(document.getElementById(`myChart2`));
+    // console.log(myChart2)
+    if (myChart2) {
+      initCharts1({
+        yData: [1, 23, 15, 24, 29, 14, 8, 17, 18, 12, 13, 14, 8, 17, 18, 12, 16, 14, 8, 17],
+        xData: [
+          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+          20,
+        ],
+        index: 0 + 2,
+        name: "中风",
+        myChart: myChart2,
+        //   yMax: 10000,
+      });
+    }
+
     ws = new WebSocket(" ws://localhost:19999");
     ws.onopen = () => {
       // connection opened
       console.info("connect success");
     };
     ws.onmessage = (e) => {
+      sitPress = 0
       let jsonObject = JSON.parse(e.data);
       //处理空数组
 
       if (jsonObject.sitData != null) {
-
+        let selectArr
         let wsPointData = jsonObject.sitData;
         // console.log(wsPointData)
         if (!Array.isArray(wsPointData)) {
@@ -85,44 +228,125 @@ export default function Home() {
           com.current?.backData({
             wsPointData: backData,
           });
-        } else if(matrixName == 'hand'){
+        } else if (matrixName == 'hand') {
           wsPointData = handLine(wsPointData)
           com.current?.sitData({
             wsPointData: wsPointData,
           });
 
-        }else if(matrixName == 'car'){
+        } else if (matrixName == 'car') {
           wsPointData = carSitLine(wsPointData)
           com.current?.sitData({
             wsPointData: wsPointData,
           });
+          selectArr = []
+          console.log(sitIndexArr , 'sitArr')
+          for(let i = sitIndexArr[0] ; i  < sitIndexArr[1] ; i++){
+            for(let j = sitIndexArr[2] ; j  < sitIndexArr[3] ; j++){
+              // sitPress += wsPointData[i*32 + j]
+              selectArr.push(wsPointData[i*32 + j])
+            }
+          }
+          
           // com.current?.sitRenew(wsPointData);
         }
 
+        let DataArr
+        if(sitIndexArr.every((a) => a== 0) && backIndexArr.every((a) => a== 0)){
+          DataArr = [...wsPointData]
+        }else{
+          DataArr = [...selectArr]
+        }
+        sitTotal = DataArr.reduce((a, b) => a + b, 0)
+        sitMean = (sitTotal / 1024).toFixed(0)
+        sitMax = findMax(DataArr)
+        sitMin = findMin(DataArr.filter((a) => a > 10))
+        sitPoint = DataArr.filter((a) => a > 10).length
+        sitArea = sitPoint * 4
+
+       
+       
+     
+        // console.log(totalArr)
+      
+        // data.current?.initCharts2(totalArr)
+      }
+
+      if (jsonObject.backData != null) {
+        backPress = 0
+        let wsPointData = jsonObject.backData;
+        // console.log(wsPointData)
+        if (!Array.isArray(wsPointData)) {
+          wsPointData = JSON.parse(wsPointData);
+        }
+
+        wsPointData = carBackLine(wsPointData)
+        // console.log(wsPointData)
+        // wsPointData = new Array(1024).fill(0)
+        // wsPointData[1023] = 100
+        com.current?.backData({
+          wsPointData: wsPointData,
+        });
 
 
-        const total = wsPointData.reduce((a, b) => a + b, 0)
+        const selectArr = []
+        for(let i = 31-backIndexArr[0] ; i  >31- backIndexArr[1] ; i--  ){
+          for(let j = backIndexArr[2] ; j  < backIndexArr[3] ; j++){
+            selectArr.push(wsPointData[i*32 + j]) 
+          }
+        }
 
-        const mean = (total / 1024).toFixed(0)
-        const max = findMax(wsPointData)
-        const min = findMin(wsPointData.filter((a) => a > 10))
-        const point = wsPointData.filter((a) => a > 10).length
-        const area = point * 4
+        // const SelectTotalPress = backPress + sitPress
 
-        data.current?.setMeanPres(mean)
-        data.current?.setMinPres(min)
-        data.current?.setMaxPres(max)
-        data.current?.setPoint(point)
-        data.current?.setArea(area)
-        data.current?.setTotalPres(total)
+        let DataArr
+        if(sitIndexArr.every((a) => a== 0) && backIndexArr.every((a) => a== 0)){
+          DataArr = [...wsPointData]
+        }else{
+          DataArr = [...selectArr]
+        }
+
+        // console.log(DataArr)
+        backTotal = DataArr.reduce((a, b) => a + b, 0)
+
+        backMean = (backTotal / 1024).toFixed(0)
+        backMax = findMax(DataArr)
+        backMin = findMin(DataArr.filter((a) => a > 10))
+        backPoint = DataArr.filter((a) => a > 10).length
+        backArea = backPoint * 4
+
+        const totalPress = backTotal + sitTotal
+        const totalMean = ((backMean + sitMean)/2).toFixed(0)
+        const totalMax = Math.max(backMax , sitMax)
+        const totalPoint = backPoint + sitPoint
+        const totalArea = backArea + sitArea
+        const totalMin = Math.min(backMin , sitMin)
+
+        data.current?.setMeanPres(totalMean)
+        // data.current?.setMinPres(totalMin)
+        data.current?.setMaxPres(totalMax)
+        data.current?.setPoint(totalPoint)
+        data.current?.setArea(totalArea)
+        data.current?.setTotalPres(totalPress)
+        
+
         if (totalArr.length < 20) {
-          totalArr.push(total)
+          totalArr.push(totalPress)
         } else {
           totalArr.shift()
-          totalArr.push(total)
+          totalArr.push(totalPress)
         }
-        data.current?.handleCharts(totalArr)
+        data.current?.handleCharts(totalArr,70000)
+
+        if (totalPointArr.length < 20) {
+          totalPointArr.push(totalPoint)
+        } else {
+          totalPointArr.shift()
+          totalPointArr.push(totalPoint)
+        }
+        data.current?.handleChartsArea(totalPointArr,2000)
+
       }
+
       if (jsonObject.port != null) {
         setPort(jsonObject.port);
       }
@@ -175,7 +399,7 @@ export default function Home() {
       }
     }
 
-    if (obj.flag) {
+    if (obj.flag != null) {
       if (ws && ws.readyState === 1) {
         ws.send(JSON.stringify({ flag: obj.flag }));
       }
@@ -262,6 +486,26 @@ export default function Home() {
     return `${value}%`
   };
 
+  const changeValue = (value) => {
+    return value < 8 ? 0 : value > 68 ? 31 : Math.round((value -8)/2)
+  }
+
+  const changeSelect = (obj) => {
+    
+    let sit = obj.sit
+    let back = obj.back
+    // console.log(sit , back , 'length')
+    const sitIndex = sit.length ? sit.map((a) => {return changeValue(a)}) : []
+    const backIndex = back.length ? back.map((a) => {return changeValue(a) }): []
+    // setSitArr(obj.sit)
+    // setBackArr(obj.back)
+    console.log(sitIndex , backIndex)
+    sitIndexArr = sitIndex
+    backIndexArr = backIndex
+    
+
+  }
+
   return (
     <div className='home'>
       <div className="setIcons">
@@ -270,11 +514,11 @@ export default function Home() {
 
             xvalue++
             if (xvalue < 3) {
-              com.current?.changeGroupRotate({ x: xvalue })
+              // com.current?.changeGroupRotate({ x: xvalue })
               console.log(xvalue)
             } else {
               xvalue = 0
-              com.current?.changeGroupRotate({ x: xvalue })
+              // com.current?.changeGroupRotate({ x: xvalue })
             }
           }}>
             <img src={plus} alt="" />
@@ -282,11 +526,11 @@ export default function Home() {
           <div className='setIcon' onClick={() => {
             yvalue++
             if (yvalue < 3) {
-              com.current?.changeGroupRotate({ y: yvalue })
+              // com.current?.changeGroupRotate({ y: yvalue })
               console.log(yvalue)
             } else {
               yvalue = 0
-              com.current?.changeGroupRotate({ y: yvalue })
+              // com.current?.changeGroupRotate({ y: yvalue })
               console.log(yvalue)
             }
           }}>
@@ -307,22 +551,22 @@ export default function Home() {
             console.log('load')
             const date = new Date(Date.now());
             const formattedDate = date.toLocaleString();
-            if (matrixName == 'foot') {
-              const dataArr = localStorage.getItem('dataArr')
-              const arr = dataArr ? JSON.parse(dataArr) : []
-              arr.push(formattedDate)
-              localStorage.setItem('dataArr', JSON.stringify(arr))
-            } else if (matrixName == 'hand') {
-              const dataArr = localStorage.getItem('handArr')
-              const arr = dataArr ? JSON.parse(dataArr) : []
-              arr.push(formattedDate)
-              localStorage.setItem('handArr', JSON.stringify(arr))
-            } else if (matrixName == 'car') {
-              const dataArr = localStorage.getItem('handArr')
-              const arr = dataArr ? JSON.parse(dataArr) : []
-              arr.push(formattedDate)
-              localStorage.setItem('handArr', JSON.stringify(arr))
-            }
+            // if (matrixName == 'foot') {
+            //   const dataArr = localStorage.getItem('dataArr')
+            //   const arr = dataArr ? JSON.parse(dataArr) : []
+            //   arr.push(formattedDate)
+            //   localStorage.setItem('dataArr', JSON.stringify(arr))
+            // } else if (matrixName == 'hand') {
+            //   const dataArr = localStorage.getItem('handArr')
+            //   const arr = dataArr ? JSON.parse(dataArr) : []
+            //   arr.push(formattedDate)
+            //   localStorage.setItem('handArr', JSON.stringify(arr))
+            // } else if (matrixName == 'car') {
+            //   const dataArr = localStorage.getItem('handArr')
+            //   const arr = dataArr ? JSON.parse(dataArr) : []
+            //   arr.push(formattedDate)
+            //   localStorage.setItem('handArr', JSON.stringify(arr))
+            // }
 
 
             wsSendObj({ flag: true, time: formattedDate })
@@ -409,7 +653,53 @@ export default function Home() {
       // changeDateArr={changeDateArr}
       />
       <Aside ref={data} />
-      {matrixName == 'foot' ? <Canvas ref={com} /> : matrixName == 'hand' ? <CanvasHand ref={com} /> : <CanvasCar ref={com} />}
+
+      {/* <div className='aside'>
+        <div className="asideContent firstAside">
+          <h2 className="asideTitle">Data Analysis</h2>
+   
+          {
+            dataArr.map((a, index) => {
+              return (
+                <div className='dataItem'>
+                  <div className='dataItemCircle'>
+                    <div className='circleItem' style={{ backgroundColor: a.color }}></div>
+                    <div>{a.data}</div>
+                  </div>
+                  <div>{index == 0 ? '正常' : index == 1 ? '正常' : '高足弓'}</div>
+                </div>
+
+              )
+            })
+          }
+        </div>
+        <div className="asideContent">
+          <h2 className="asideTitle">Pressure Data</h2>
+          <h1 className='pressData'>{totalPres}</h1>
+          <div className='pressTitle standardColor'>总体压力 Total Pres</div>
+          <div id="myChart2" style={{ height: '300px', width: '300px' }}></div>
+          {
+            dataArr1.map((a, index) => {
+              return (
+                <div className='dataItem'>
+                  <div className='dataItemCircle'>
+                    <div className='circleItem' style={{ backgroundColor: a.color }}></div>
+                    <div>{a.data}</div>
+                  </div>
+                  <div className='dataIteminfo'>
+                    <div className='standardColor'>{a.eng}</div>
+                    <div>{arr[index]}</div>
+                  </div>
+                </div>
+              )
+            })
+          }
+        </div>
+      </div> */}
+
+
+
+      {matrixName == 'foot' ? <Canvas ref={com} /> : matrixName == 'hand' ? <CanvasHand ref={com} /> : <CanvasCar ref={com} changeSelect={changeSelect} />}
 
       {local ?
         <div style={{ position: "fixed", bottom: 0, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

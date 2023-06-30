@@ -20,7 +20,7 @@ import { SelectionHelper } from "./SelectionHelper";
 import { checkRectIndex, checkRectangleIntersection, getPointCoordinate, getPointCoordinateback } from "./threeUtil1";
 import { getPointCoordinate1 } from "./threeUtil2";
 var newDiv, newDiv1, selectStartArr = [], selectEndArr = [], sitArr, backArr, sitMatrix = [], backMatrix = [], selectMatrix = []
-let sitIndexArr, backIndexArr
+let sitIndexArr = [], backIndexArr = []
 const group = new THREE.Group();
 const sitInit = 0;
 const backInit = 0;
@@ -47,20 +47,21 @@ var valuej1 = 200,
     valuef2 = 5,
     valuelInit1 = 1,
     valuelInit2 = 2;
-
+    let particles,
+    particles1,
+    material,
+    backGeometry,
+    sitGeometry
+    let cube, chair, mixer, clips;
 const Canvas = React.forwardRef((props, refs) => {
   let dataFlag = false;
   const changeDataFlag = () => {
     dataFlag = true;
     // console.log("first", dataFlag);
   };
-  let particles,
-    particles1,
-    material,
-    backGeometry,
-    sitGeometry,
+
     
-    bigArr1 = new Array(backnum1 * backInterp * backnum2 * backInterp).fill(1),
+   let bigArr1 = new Array(backnum1 * backInterp * backnum2 * backInterp).fill(1),
     bigArrg1 = new Array(
       (backnum1 * backInterp + 2 * backOrder) *
       (backnum2 * backInterp + 2 * backOrder)
@@ -90,7 +91,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
   let camera, scene, renderer;
   let controls;
-  let cube, chair, mixer, clips;
+
   const clock = new THREE.Clock();
   const ALT_KEY = 18;
   const CTRL_KEY = 17;
@@ -217,28 +218,11 @@ const Canvas = React.forwardRef((props, refs) => {
     document.addEventListener('pointerdown', function (event) {
       sitIndexArr = []
       backIndexArr = []
+      props.changeSelect({sit : sitIndexArr , back : backIndexArr})
       selectStartArr = [(event.clientX), event.clientY]
 
       sitArr = getPointCoordinate({ particles, camera, position: { x: -10, y: -20, z: 0 } })
       backArr = getPointCoordinateback({ particles: particles1, camera, position: { x: -10, y: -20, z: 0 }, width: AMOUNTX1 })
-
-      // newDiv = document.createElement('div');
-
-      // newDiv.classList.add('my-class');
-      // // 设置 <div> 的属性、内容或样式
-      // newDiv.style.backgroundColor = 'lightblue';
-      // // newDiv.style.padding = '10px';
-      // newDiv.style.width = `${100}px`
-      // newDiv.style.height = `${100}px`
-      // // newDiv.style.left = `${viewportPosition.x}px`
-      // // newDiv.style.top = `${viewportPosition.y}px`
-      // // newDiv.style.left = `${vector.x}px`
-      // // newDiv.style.top = `${vector.y}px`
-      // newDiv.style.left = `${backArr[0].x}px`
-      // newDiv.style.top = `${backArr[0].y}px`
-
-      // // 将 <div> 元素添加到页面中的某个元素中
-      // document.body?.appendChild(newDiv);
 
       sitMatrix = [sitArr[0].x, sitArr[0].y, sitArr[1].x, sitArr[1].y]
       backMatrix = [backArr[1].x, backArr[1].y, backArr[0].x, backArr[0].y]
@@ -247,7 +231,27 @@ const Canvas = React.forwardRef((props, refs) => {
     document.addEventListener('pointermove', function (event) {
       selectEndArr = [(event.clientX), event.clientY,]
 
+     
+
       selectMatrix = [...selectStartArr, ...selectEndArr]
+
+      if(selectStartArr[0] > selectEndArr[0] ){
+        // selectMatrix = [...selectEndArr , ...selectStartArr]
+        selectMatrix[0] = selectEndArr[0]
+        selectMatrix[2] = selectStartArr[0]
+      }else{
+        selectMatrix[0] = selectStartArr[0]
+        selectMatrix[2] = selectEndArr[0]
+      }
+
+      if(selectStartArr[1] > selectEndArr[1] ){
+        selectMatrix[1] = selectEndArr[1]
+        selectMatrix[3] = selectStartArr[1]
+      }else{
+        selectMatrix[1] = selectStartArr[1]
+        selectMatrix[3] = selectEndArr[1]
+      }
+
 
       if (!controlsFlag) {
         const sitInterArr = checkRectangleIntersection(selectMatrix, sitMatrix)
@@ -255,6 +259,8 @@ const Canvas = React.forwardRef((props, refs) => {
 
         if (sitInterArr) sitIndexArr = checkRectIndex(sitMatrix, sitInterArr, AMOUNTX, AMOUNTY)
         if (backInterArr) backIndexArr = checkRectIndex(backMatrix, backInterArr, AMOUNTX1, AMOUNTY1)
+
+        props.changeSelect({sit : sitIndexArr , back : backIndexArr})
       }
 
     
@@ -263,7 +269,7 @@ const Canvas = React.forwardRef((props, refs) => {
     document.addEventListener('pointerup', function (event) {
       selectStartArr = []
       selectEndArr = []
-
+     
     });
 
   }
@@ -368,7 +374,7 @@ const Canvas = React.forwardRef((props, refs) => {
     particles1 = new THREE.Points(backGeometry, material1);
     particles1.geometry.attributes.position.needsUpdate = true;
     particles1.geometry.attributes.color.needsUpdate = true;
-
+    particles1.geometry.attributes.scale.needsUpdate = true;
     particles1.scale.x = 0.0062;
     particles1.scale.y = 0.0062;
     particles1.scale.z = 0.0062;
@@ -558,6 +564,11 @@ const Canvas = React.forwardRef((props, refs) => {
 
   //  更新靠背数据
   function backRenew() {
+    ndata = ndata.map((a, index) => (a - valuef2 < 0 ? 0 : a));
+    ndataNum = ndata.reduce((a, b) => a + b, 0);
+    if (ndataNum < valuelInit2) {
+      ndata = new Array(backnum1*backnum2).fill(1);
+    }
     interp(ndata, bigArr1, backnum1, backInterp);
     //高斯滤波
 
@@ -578,7 +589,7 @@ const Canvas = React.forwardRef((props, refs) => {
       backnum1 * backInterp + 2 * backOrder,
       valueg2
     );
-
+      // console.log(backGeometry,scales1)
     let k = 0,
       l = 0;
 
@@ -591,15 +602,23 @@ const Canvas = React.forwardRef((props, refs) => {
 
         positions1[k + 1] = smoothBig1[l] / value2; // y
         let rgb
+
+        
+        
         if (backIndexArr && !backIndexArr.every((a) => a == 0)) {
 
           if (ix >= backIndexArr[0] && ix < backIndexArr[1] && iy < AMOUNTY1 - backIndexArr[2] && iy >= AMOUNTY1 - backIndexArr[3]) {
-            rgb = [255, 0, 0];
+            // rgb = [255, 0, 0];
+            rgb = jetWhite2(0, valuej2, smoothBig1[l] + 50);
+            scales1[l] = 2;
+            // positions1[k + 1] = smoothBig1[l] / value2 - 1000
           } else {
             rgb = jetWhite2(0, valuej2, smoothBig1[l]);
+            scales1[l] = 1;
           }
         } else {
           rgb = jetWhite2(0, valuej2, smoothBig1[l]);
+          scales1[l] = 1;
         }
 
 
@@ -610,14 +629,15 @@ const Canvas = React.forwardRef((props, refs) => {
         l++;
       }
     }
-
+    
     particles1.geometry.attributes.position.needsUpdate = true;
     particles1.geometry.attributes.color.needsUpdate = true;
-
+    particles1.geometry.attributes.scale.needsUpdate = true;
     backGeometry.setAttribute(
       "position",
       new THREE.BufferAttribute(positions1, 3)
     );
+    backGeometry.setAttribute("scale", new THREE.BufferAttribute(scales1, 1));
     backGeometry.setAttribute("color", new THREE.BufferAttribute(colors1, 3));
   }
 
@@ -629,6 +649,8 @@ const Canvas = React.forwardRef((props, refs) => {
     if (ndata1Num < valuelInit1) {
       ndata1 = new Array(sitnum1*sitnum2).fill(1);
     }
+
+
     interp(ndata1, bigArr, sitnum1, sitInterp);
     // console.log(bigArr.filter((a) => a > 1).length)
     let bigArrs = addSide(
@@ -646,7 +668,7 @@ const Canvas = React.forwardRef((props, refs) => {
       sitnum1 * sitInterp + sitOrder * 2,
       valueg1
     );
-
+    // console.log(big  Arrg)
     let k = 0,
       l = 0;
 
@@ -667,10 +689,10 @@ const Canvas = React.forwardRef((props, refs) => {
           if (ix >= sitIndexArr[0] && ix < sitIndexArr[1] && iy >= sitIndexArr[2] && iy < sitIndexArr[3]) {
             rgb = [255, 0, 0];
           } else {
-            rgb = jetWhite2(0, valuej1, smoothBig1[l]);
+            rgb = jetWhite2(0, valuej1, smoothBig[l]);
           }
         } else {
-          rgb = jetWhite2(0, valuej1, smoothBig1[l]);
+          rgb = jetWhite2(0, valuej1, smoothBig[l]);
         }
 
         // const rgb = jetWhite2(0, valuej1, smoothBig[l]);
@@ -704,7 +726,7 @@ const Canvas = React.forwardRef((props, refs) => {
 
   function render() {
     backRenew();
-
+    // console.log(ndata1 , ndata)
     sitRenew();
     TWEEN.update();
     if (controlsFlag) {
@@ -730,31 +752,12 @@ const Canvas = React.forwardRef((props, refs) => {
   function backData(prop) {
     const {
       wsPointData: wsPointData,
-      valuej,
-      valueg,
-      value,
-      valuel,
-      valuef,
-      valuelInit,
+      
     } = prop;
-    valuej2 = valuej;
-    valueg2 = valueg;
-    value2 = value;
-    valuel2 = valuel;
-    valuef2 = valuef;
-    valuelInit2 = valuelInit;
+    
     //处理空数组
-    // console.log(ndata)
-    // ndata = wsPointData.splice(40, 160);
-    ndata = wsPointData
-    console.log(ndata);
-    // 修改线序 坐垫
-    ndataNum = ndata.reduce((a, b) => a + b, 0);
-    ndata = ndata.map((a, index) => (a - valuef2 < 0 ? 0 : a - valuef2));
 
-    // if (ndataNum < valuelInit) {
-    //   ndata = new Array(120).fill(1);
-    // }
+    ndata = wsPointData
   }
   function backValue(prop) {
     const { valuej, valueg, value, valuel, valuef, valuelInit } = prop;
@@ -765,11 +768,7 @@ const Canvas = React.forwardRef((props, refs) => {
     if (valuef) valuef2 = valuef;
 
     if (valuelInit) valuelInit2 = valuelInit;
-    ndata = ndata.map((a, index) => (a - valuef2 < 0 ? 0 : a - valuef2));
-    ndataNum = ndata.reduce((a, b) => a + b, 0);
-    // if (ndataNum < valuelInit2) {
-    //   ndata = new Array(120).fill(1);
-    // }
+    
   }
   // 座椅数据
   function sitValue(prop) {

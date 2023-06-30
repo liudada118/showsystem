@@ -2,15 +2,26 @@ import React, { useEffect, useImperativeHandle, useState } from 'react'
 import './aside.scss'
 import Chart, { CanvasDemo, Chart2 } from '../chart/Chart'
 import * as echarts from "echarts";
-const dataArr = [{
-    color: '#3CFF2B',
-    data: '左脚内外翻'
-}, {
+// const dataArr = [{
+//     color: '#3CFF2B',
+//     data: '左脚内外翻'
+// }, {
+//     color: '#2A99FF',
+//     data: '右脚内外翻'
+// }, {
+//     color: '#FF2A2A',
+//     data: '足弓分类'
+// },]
+
+const dataArr = [ {
+    color: '#FFA63F',
+    data: '点数',
+    eng: 'Points'
+},
+{
     color: '#2A99FF',
-    data: '右脚内外翻'
-}, {
-    color: '#FF2A2A',
-    data: '足弓分类'
+    data: '面积',
+    eng: 'Area'
 },]
 
 const dataArr1 = [
@@ -22,21 +33,8 @@ const dataArr1 = [
         color: '#FF2A2A',
         data: '最大压力',
         eng: 'Max Pres'
-    }, {
-        color: '#FFA63F',
-        data: '最小压力',
-        eng: 'Min Pres'
     },
     {
-        color: '#FFA63F',
-        data: '点数',
-        eng: 'Points'
-    },
-    {
-        color: '#2A99FF',
-        data: '面积',
-        eng: 'Area'
-    }, {
         color: '#FF2A2A',
         data: '压强',
         eng: 'Pressure'
@@ -168,7 +166,7 @@ const Aside = React.forwardRef((props, refs) => {
                         color: "rgba(70,132,147,0.5)",
                     },
                 },
-                max: 30,
+                max: props.yMax,
                 axisLabel: {
                     show: false,
                     textStyle: {
@@ -205,28 +203,41 @@ const Aside = React.forwardRef((props, refs) => {
                
             ],
         };
-        // console.log(option)
         option && props.myChart.setOption(option);
-
-        // window.addEventListener("resize", function () {
-        //   props.myChart.resize();
-        // });
+        
     };
 
-    const handleCharts = (arr) => {
-        // console.log(myChart2,arr)
+    const handleCharts = (arr , value) => {
+       
         if (myChart2) {
-            // initCharts1({
-            //     yData: arr,
-            //     xData: [
-            //         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-            //         20,
-            //     ],
-            //     index: 0 + 1,
-            //     name: "中风",
-            //     myChart: myChart2,
-            //     //   yMax: 10000,
-            // });
+            initCharts1({
+                yData: arr,
+                xData: [
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                    20,
+                ],
+                index: 0 + 1,
+                name: "中风",
+                myChart: myChart2,
+                yMax : value
+            });
+        }
+    }
+
+    const handleChartsArea = (arr ,value) => {
+       
+        if (myChart1) {
+            initCharts1({
+                yData: arr,
+                xData: [
+                    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                    20,
+                ],
+                index: 0 + 1,
+                name: "中风",
+                myChart: myChart1,
+                yMax : value
+            });
         }
     }
 
@@ -248,26 +259,13 @@ const Aside = React.forwardRef((props, refs) => {
         setPressure,
         setPresStan,
         setTotalPres,
-        handleCharts
+        handleCharts,
+        handleChartsArea
     }));
 
     useEffect(() => {
-        // myChart1 = echarts.init(document.getElementById(`myChart1`));
-        // console.log(myChart1)
-        // if (myChart1) {
-        //     initCharts({
-        //         yData: [1, 23, 15, 24, 29, 14, 8, 17, 18, 12, 13, 14, 8, 17, 18, 12, 16, 14, 8, 17],
-        //         xData: [
-        //             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-        //             20,
-        //         ],
-        //         index: 0 + 1,
-        //         name: "中风",
-        //         myChart: myChart1,
-        //         //   yMax: 10000,
-        //     });
-        // }
-
+        
+        myChart1 = echarts.init(document.getElementById(`myChart1`));
         myChart2 = echarts.init(document.getElementById(`myChart2`));
         // console.log(myChart2)
         if (myChart2) {
@@ -285,14 +283,14 @@ const Aside = React.forwardRef((props, refs) => {
         }
     }, [])
 
-    const arr = [meanPres, minPres, maxPres, point, area, pressure, presStan]
+    const arr = [meanPres, maxPres, pressure, presStan]
+    const arrArea = [ point, area,]
     return (
 
         <div className='aside'>
             <div className="asideContent firstAside">
-                <h2 className="asideTitle">Data Analysis</h2>
-                {/* <div id="myChart1" style={{ height: '200px' }}></div> */}
-                <CanvasDemo />
+                <h2 className="asideTitle">Pressure Area</h2>
+                <div id="myChart1" style={{ height: '150px' }}></div>
                 {
                     dataArr.map((a, index) => {
                         return (
@@ -301,7 +299,10 @@ const Aside = React.forwardRef((props, refs) => {
                                     <div className='circleItem' style={{ backgroundColor: a.color }}></div>
                                     <div>{a.data}</div>
                                 </div>
-                                <div>{index ==0 ? '正常' : index == 1 ? '正常' : '高足弓'}</div>
+                                <div className='dataIteminfo'>
+                                    <div className='standardColor'>{a.eng}</div>
+                                    <div>{arrArea[index]}</div>
+                                </div>
                             </div>
 
                         )
