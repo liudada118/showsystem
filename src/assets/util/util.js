@@ -177,9 +177,9 @@ export function interp(smallMat, bigMat, Length, num) {
     for (let y = 1; y <= Length; y++) {
       bigMat[
         Length * num * (num * (y - 1)) +
-          (Length * num * num) / 2 +
-          num * (x - 1) +
-          num / 2
+        (Length * num * num) / 2 +
+        num * (x - 1) +
+        num / 2
       ] = smallMat[Length * (y - 1) + x - 1] * 10;
     }
   }
@@ -190,9 +190,9 @@ export function interp1016(smallMat, bigMat, height, width, num) {
     for (let y = 1; y <= width; y++) {
       bigMat[
         width * num * (num * (x - 1)) +
-          (width * num )* Math.floor(num / 2) +
-          num * (y - 1) +
-          Math.floor(num / 2)
+        (width * num) * Math.floor(num / 2) +
+        num * (y - 1) +
+        Math.floor(num / 2)
       ] = smallMat[height * (y - 1) + x - 1] * 10;
     }
   }
@@ -519,13 +519,13 @@ export function jetWhite1(min, max, x) {
 }
 
 export function jetWhite2(min, max, x) {
-  if(!x){
-    return rainbowColors[rainbowColors.length-1]
+  if (!x) {
+    return rainbowColors[rainbowColors.length - 1]
   }
   const length = rainbowColors.length;
   const count = (max - min) / length;
   const num = Math.floor(x / count) >= length - 1 ? length - 1 : Math.floor(x / count) < 0 ? 0 : Math.floor(x / count);
-    // console.log(length,count,x  , num,Math.floor(x / count))
+  // console.log(length,count,x  , num,Math.floor(x / count))
   return rainbowColors[length - 1 - num];
 }
 
@@ -594,7 +594,7 @@ export function jetWhite2Back(min, max, x) {
   const length = rainbowBackColors.length;
   const count = (max - min) / length;
   const num = Math.floor(x / count) >= length - 1 ? length - 1 : Math.floor(x / count) < 0 ? 0 : Math.floor(x / count);
-    // console.log(length,count,x  , num,Math.floor(x / count))
+  // console.log(length,count,x  , num,Math.floor(x / count))
   return rainbowBackColors[length - 1 - num];
 }
 
@@ -768,7 +768,7 @@ export function press(arr, width, height, num) {
       if (newArr1[j + i * height] > 6) {
         newArr1[j + i * height] = parseInt(
           newArr1[j + i * height] +
-            (rowArrList[i] - newArr1[j + i * height]) / (num ? num : 8)
+          (rowArrList[i] - newArr1[j + i * height]) / (num ? num : 8)
         );
       }
     }
@@ -812,7 +812,7 @@ export function pressSj(arr, width, height) {
       if (newArr1[j + i * height] > 6) {
         newArr1[j + i * height] = parseInt(
           newArr1[j + i * height] +
-            (rowArrList[i] - newArr1[j + i * height]) / 4
+          (rowArrList[i] - newArr1[j + i * height]) / 4
         );
       }
     }
@@ -827,6 +827,20 @@ export function findMax(arr) {
     max = max > item ? max : item;
   });
   return max;
+}
+
+export function returnChartMax(value) {
+  const chartValueArr = [3000, 5000, 10000, 18000, 30000, 45000, 60000, 80000]
+  for (let i = 0; i < chartValueArr.length - 1;) {
+    if (value > chartValueArr[i] && value < chartValueArr[i + 1]) {
+      return chartValueArr[i + 1]
+    } else if (value > chartValueArr[i] && value > chartValueArr[i + 1]) {
+      i++
+    } else if (value < chartValueArr[i]) {
+      return chartValueArr[i]
+    }
+  }
+  return 100000
 }
 
 export function findMin(arr) {
@@ -957,6 +971,6 @@ export function discoverSureCurve(detectedArr, num) {
 }
 
 
-export  function footLine(){
-  
+export function footLine() {
+
 }

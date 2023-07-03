@@ -19,7 +19,7 @@ import { SelectionBox } from "./SelectionBox";
 import { SelectionHelper } from "./SelectionHelper";
 import { checkRectIndex, checkRectangleIntersection, getPointCoordinate, getPointCoordinateback } from "./threeUtil1";
 import { getPointCoordinate1 } from "./threeUtil2";
-var newDiv, newDiv1, selectStartArr = [], selectEndArr = [], sitArr, backArr, sitMatrix = [], backMatrix = [], selectMatrix = []
+var newDiv, newDiv1, selectStartArr = [], selectEndArr = [], sitArr, backArr, sitMatrix = [], backMatrix = [], selectMatrix = [],selectHelper
 let sitIndexArr = [], backIndexArr = []
 const group = new THREE.Group();
 const sitInit = 0;
@@ -213,7 +213,7 @@ const Canvas = React.forwardRef((props, refs) => {
     window.addEventListener("resize", onWindowResize);
 
     // const selectionBox = new SelectionBox(camera, scene);
-    const selectHelper = new SelectionHelper(renderer, controls, 'selectBox', changeFlag);
+    selectHelper = new SelectionHelper(renderer, controls, 'selectBox', changeFlag);
 
     document.addEventListener('pointerdown', function (event) {
       sitIndexArr = []
@@ -564,10 +564,14 @@ const Canvas = React.forwardRef((props, refs) => {
 
   //  更新靠背数据
   function backRenew() {
-    ndata = ndata.map((a, index) => (a - valuef2 < 0 ? 0 : a));
+    const newData = [...ndata]
+   
+    ndata = [...newData].map((a, index) => (a - valuef2 < 0 ? 0 : a));
     ndataNum = ndata.reduce((a, b) => a + b, 0);
     if (ndataNum < valuelInit2) {
       ndata = new Array(backnum1*backnum2).fill(1);
+    }else{
+      ndata = [...newData]
     }
     interp(ndata, bigArr1, backnum1, backInterp);
     //高斯滤波
@@ -600,7 +604,7 @@ const Canvas = React.forwardRef((props, refs) => {
         //柔化处理smooth
         smoothBig1[l] = smoothBig1[l] + (value - smoothBig1[l] + 0.5) / valuel2;
 
-        positions1[k + 1] = smoothBig1[l] / value2; // y
+        positions1[k + 1] = -smoothBig1[l] / value2; // y
         let rgb
 
         
@@ -643,11 +647,14 @@ const Canvas = React.forwardRef((props, refs) => {
 
   //  更新座椅数据
   function sitRenew() {
-    ndata1 = ndata1.map((a, index) => (a - valuef1 < 0 ? 0 : a ));
+    const newData = [...ndata]
+    ndata1 = [...newData].map((a, index) => (a - valuef1 < 0 ? 0 : a ));
 
     ndata1Num = ndata1.reduce((a, b) => a + b, 0);
     if (ndata1Num < valuelInit1) {
       ndata1 = new Array(sitnum1*sitnum2).fill(1);
+    }else{
+      ndata1 = [...newData]
     }
 
 
@@ -751,6 +758,7 @@ const Canvas = React.forwardRef((props, refs) => {
   //   靠背数据
   function backData(prop) {
     const {
+
       wsPointData: wsPointData,
       
     } = prop;
@@ -766,7 +774,6 @@ const Canvas = React.forwardRef((props, refs) => {
     if (value) value2 = value;
     if (valuel) valuel2 = valuel;
     if (valuef) valuef2 = valuef;
-
     if (valuelInit) valuelInit2 = valuelInit;
     
   }
@@ -799,6 +806,11 @@ const Canvas = React.forwardRef((props, refs) => {
     ndata1 = wsPointData;
   }
 
+  function changeSelectFlag(value){
+    controlsFlag = value
+    selectHelper.isShiftPressed = !value
+  }
+
   useImperativeHandle(refs, () => ({
     backData: backData,
     sitData: sitData,
@@ -807,6 +819,7 @@ const Canvas = React.forwardRef((props, refs) => {
     backValue,
     // backRenew,
     // sitRenew,
+    changeSelectFlag,
     actionAll: actionAll,
     actionSit: actionSit,
     actionBack: actionBack,

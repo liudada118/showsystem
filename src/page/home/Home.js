@@ -15,13 +15,15 @@ import load from '../../assets/images/load.png'
 import stop from '../../assets/images/stop.png'
 import play from '../../assets/images/play.png'
 import pause from '../../assets/images/pause.png'
-import { findMax, findMin, } from '../../assets/util/util'
+import select from '../../assets/images/select.png'
+import { findMax, findMin, returnChartMax, } from '../../assets/util/util'
 import { rainbowColors, rainbowTextColors } from "../../assets/util/color";
 import { handLine, footLine, carSitLine, carBackLine } from '../../assets/util/line';
-import { Select, Slider } from 'antd'
+import { Select, Slider,Popover, } from 'antd'
+import {SelectOutlined} from '@ant-design/icons'
 import * as echarts from 'echarts'
-let ws, xvalue = 0, yvalue = 0, myChart2 , sitIndexArr = new Array(4).fill(0) , backIndexArr = new Array(4).fill(0) , sitPress= 0 , backPress = 0;
-let backTotal = 0 ,backMean= 0,backMax= 0 ,backMin= 0 , backPoint= 0,backArea= 0,sitTotal= 0 ,sitMean= 0,sitMax= 0 ,sitMin= 0 , sitPoint= 0,sitArea= 0
+let ws, xvalue = 0, yvalue = 0, myChart2, sitIndexArr = new Array(4).fill(0), backIndexArr = new Array(4).fill(0), sitPress = 0, backPress = 0;
+let backTotal = 0, backMean = 0, backMax = 0, backMin = 0, backPoint = 0, backArea = 0, sitTotal = 0, sitMean = 0, sitMax = 0, sitMin = 0, sitPoint = 0, sitArea = 0
 
 const dataArr1 = [
   {
@@ -73,7 +75,7 @@ class Com extends React.Component {
   }
 }
 
-let totalArr = [],totalPointArr = [],  wsMatrixName = 'foot'
+let totalArr = [], totalPointArr = [], wsMatrixName = 'foot'
 
 
 const initCharts1 = (props) => {
@@ -163,15 +165,16 @@ const initCharts1 = (props) => {
 export default function Home() {
   const com = useRef()
   const data = useRef()
-  const [valueg1, setValueg1] = useState(2)
-  const [valuej1, setValuej1] = useState(200)
-  const [valuel1, setValuel1] = useState(2)
-  const [valuef1, setValuef1] = useState(2)
-  const [value1, setValue1] = useState(2)
+  const [valueg1, setValueg1] = useState(localStorage.getItem('carValueg') ? JSON.parse(localStorage.getItem('carValueg'))  : 2)
+  const [valuej1, setValuej1] = useState(localStorage.getItem('carValuej') ? JSON.parse(localStorage.getItem('carValuej'))  :200)
+  const [valuel1, setValuel1] = useState(localStorage.getItem('carValuel') ? JSON.parse(localStorage.getItem('carValuel'))  :2)
+  const [valuef1, setValuef1] = useState(localStorage.getItem('carValuef') ? JSON.parse(localStorage.getItem('carValuef'))  :2)
+  const [value1, setValue1] = useState(localStorage.getItem('carValue') ? JSON.parse(localStorage.getItem('carValue'))  :2)
   const [port, setPort] = useState([])
-  const [portname, setPortname] = useState()
+  const [portname, setPortname] = useState('')
+  const [portnameBack, setPortnameBack] = useState('')
   const [matrixName, setMatrixName] = useState('car')
-  const [valuelInit1, setValuelInit1] = useState(2)
+  const [valuelInit1, setValuelInit1] = useState(localStorage.getItem('carValueInit') ? JSON.parse(localStorage.getItem('carValueInit'))  :2)
   const [length, setLength] = useState(0)
   const [local, setLocal] = useState(false)
   const [dataArr, setDataArr] = useState([])
@@ -179,10 +182,11 @@ export default function Home() {
   const [playflag, setPlayflag] = useState(false)
   const [time, setTime] = useState([])
   const [xdata, setXdata] = useState(0)
-  const [sitArr , setSitArr] = useState([])
-  const [backArr , setBackArr] = useState([])
-
-
+  const [sitArr, setSitArr] = useState([])
+  const [backArr, setBackArr] = useState([])
+  const [colFlag , setColFlag] = useState(true)
+  const [colNum , setColNum] = useState(0)
+  const [selectFlag , setSelectFlag] = useState(false)
   useEffect(() => {
     myChart2 = echarts.init(document.getElementById(`myChart2`));
     // console.log(myChart2)
@@ -200,7 +204,7 @@ export default function Home() {
       });
     }
 
-    ws = new WebSocket(" ws://localhost:19999");
+    ws = new WebSocket("ws://localhost:19999");
     ws.onopen = () => {
       // connection opened
       console.info("connect success");
@@ -216,6 +220,12 @@ export default function Home() {
         // console.log(wsPointData)
         if (!Array.isArray(wsPointData)) {
           wsPointData = JSON.parse(wsPointData);
+        }
+
+        if(colFlag){
+          let num = colNum
+          num++
+          setColNum(num)
         }
 
         if (matrixName == 'foot') {
@@ -240,21 +250,21 @@ export default function Home() {
             wsPointData: wsPointData,
           });
           selectArr = []
-          console.log(sitIndexArr , 'sitArr')
-          for(let i = sitIndexArr[0] ; i  < sitIndexArr[1] ; i++){
-            for(let j = sitIndexArr[2] ; j  < sitIndexArr[3] ; j++){
+          console.log(sitIndexArr, 'sitArr')
+          for (let i = sitIndexArr[0]; i < sitIndexArr[1]; i++) {
+            for (let j = sitIndexArr[2]; j < sitIndexArr[3]; j++) {
               // sitPress += wsPointData[i*32 + j]
-              selectArr.push(wsPointData[i*32 + j])
+              selectArr.push(wsPointData[i * 32 + j])
             }
           }
-          
+
           // com.current?.sitRenew(wsPointData);
         }
 
         let DataArr
-        if(sitIndexArr.every((a) => a== 0) && backIndexArr.every((a) => a== 0)){
+        if (sitIndexArr.every((a) => a == 0) && backIndexArr.every((a) => a == 0)) {
           DataArr = [...wsPointData]
-        }else{
+        } else {
           DataArr = [...selectArr]
         }
         sitTotal = DataArr.reduce((a, b) => a + b, 0)
@@ -264,11 +274,11 @@ export default function Home() {
         sitPoint = DataArr.filter((a) => a > 10).length
         sitArea = sitPoint * 4
 
-       
-       
-     
+
+
+
         // console.log(totalArr)
-      
+
         // data.current?.initCharts2(totalArr)
       }
 
@@ -290,18 +300,18 @@ export default function Home() {
 
 
         const selectArr = []
-        for(let i = 31-backIndexArr[0] ; i  >31- backIndexArr[1] ; i--  ){
-          for(let j = backIndexArr[2] ; j  < backIndexArr[3] ; j++){
-            selectArr.push(wsPointData[i*32 + j]) 
+        for (let i = 31 - backIndexArr[0]; i > 31 - backIndexArr[1]; i--) {
+          for (let j = backIndexArr[2]; j < backIndexArr[3]; j++) {
+            selectArr.push(wsPointData[i * 32 + j])
           }
         }
 
         // const SelectTotalPress = backPress + sitPress
 
         let DataArr
-        if(sitIndexArr.every((a) => a== 0) && backIndexArr.every((a) => a== 0)){
+        if (sitIndexArr.every((a) => a == 0) && backIndexArr.every((a) => a == 0)) {
           DataArr = [...wsPointData]
-        }else{
+        } else {
           DataArr = [...selectArr]
         }
 
@@ -315,11 +325,11 @@ export default function Home() {
         backArea = backPoint * 4
 
         const totalPress = backTotal + sitTotal
-        const totalMean = ((backMean + sitMean)/2).toFixed(0)
-        const totalMax = Math.max(backMax , sitMax)
+        const totalMean = ((backMean + sitMean) / 2).toFixed(0)
+        const totalMax = Math.max(backMax, sitMax)
         const totalPoint = backPoint + sitPoint
         const totalArea = backArea + sitArea
-        const totalMin = Math.min(backMin , sitMin)
+        const totalMin = Math.min(backMin, sitMin)
 
         data.current?.setMeanPres(totalMean)
         // data.current?.setMinPres(totalMin)
@@ -327,7 +337,7 @@ export default function Home() {
         data.current?.setPoint(totalPoint)
         data.current?.setArea(totalArea)
         data.current?.setTotalPres(totalPress)
-        
+
 
         if (totalArr.length < 20) {
           totalArr.push(totalPress)
@@ -335,7 +345,9 @@ export default function Home() {
           totalArr.shift()
           totalArr.push(totalPress)
         }
-        data.current?.handleCharts(totalArr,70000)
+        const max = findMax(totalArr)
+
+        data.current?.handleCharts(totalArr, returnChartMax(max))
 
         if (totalPointArr.length < 20) {
           totalPointArr.push(totalPoint)
@@ -343,7 +355,9 @@ export default function Home() {
           totalPointArr.shift()
           totalPointArr.push(totalPoint)
         }
-        data.current?.handleChartsArea(totalPointArr,2000)
+
+        const max1 = findMax(totalPointArr)
+        data.current?.handleChartsArea(totalPointArr, returnChartMax(max1))
 
       }
 
@@ -435,6 +449,12 @@ export default function Home() {
       }
     }
 
+    if (obj.exchange != null) {
+      if (ws && ws.readyState === 1) {
+        ws.send(JSON.stringify({ exchange: obj.exchange }));
+      }
+    }
+
 
   }
 
@@ -487,42 +507,72 @@ export default function Home() {
   };
 
   const changeValue = (value) => {
-    return value < 8 ? 0 : value > 68 ? 31 : Math.round((value -8)/2)
+    return value < 8 ? 0 : value > 68 ? 31 : Math.round((value - 8) / 2)
   }
 
   const changeSelect = (obj) => {
-    
+
     let sit = obj.sit
     let back = obj.back
     // console.log(sit , back , 'length')
-    const sitIndex = sit.length ? sit.map((a) => {return changeValue(a)}) : []
-    const backIndex = back.length ? back.map((a) => {return changeValue(a) }): []
-    // setSitArr(obj.sit)
+    const sitIndex = sit.length ? sit.map((a) => { return changeValue(a) }) : []
+    const backIndex = back.length ? back.map((a) => { return changeValue(a) }) : []
+    // setSitArr(obj.sit) 
     // setBackArr(obj.back)
-    console.log(sitIndex , backIndex)
+    console.log(sitIndex, backIndex)
     sitIndexArr = sitIndex
     backIndexArr = backIndex
-    
+
 
   }
+
+const text = '旋转'
+const text2 = '框选'
+
+const content = (
+  <div>
+    <p>绕x轴旋转30°</p>
+  </div>
+);
+
+const content1 = (
+  <div>
+    <p>绕y轴旋转30°</p>
+  </div>
+);
+
+const content2 = (
+  <div>
+    <p>款选一个矩形区域</p>
+  </div>
+);
 
   return (
     <div className='home'>
       <div className="setIcons">
         <div className="setIconItem setIconItem1">
-          <div className='setIcon marginB10' onClick={() => {
 
-            xvalue++
-            if (xvalue < 3) {
-              // com.current?.changeGroupRotate({ x: xvalue })
-              console.log(xvalue)
-            } else {
-              xvalue = 0
-              // com.current?.changeGroupRotate({ x: xvalue })
-            }
-          }}>
-            <img src={plus} alt="" />
-          </div>
+          <Popover placement="top" title={text} content={content}
+          // arrow={mergedArrow}
+          >
+            <div className='setIcon marginB10' onClick={() => {
+
+              xvalue++
+              if (xvalue < 3) {
+                // com.current?.changeGroupRotate({ x: xvalue })
+                console.log(xvalue)
+              } else {
+                xvalue = 0
+                // com.current?.changeGroupRotate({ x: xvalue })
+              }
+            }}>
+              <img src={plus} alt="" />
+            </div>
+          </Popover>
+
+          <Popover placement="top" title={text} content={content1}
+          // arrow={mergedArrow}
+          >
           <div className='setIcon' onClick={() => {
             yvalue++
             if (yvalue < 3) {
@@ -536,6 +586,7 @@ export default function Home() {
           }}>
             <img src={minus} alt="" />
           </div>
+          </Popover>
         </div>
 
         <div className="setIconItem setIconItem2">
@@ -579,12 +630,23 @@ export default function Home() {
           }}>
             <img src={stop} alt="" />
           </div>
-          <div className='setIcon'>
-            <img src={icon2} alt="" />
+          <Popover placement="top" title={text2} content={content2}
+          // arrow={mergedArrow}
+          >
+          <div className='setIcon' onClick={() => {
+            const flag = selectFlag 
+            setSelectFlag(!flag)
+            com.current?.changeSelectFlag(flag)
+          }}
+
+            
+            >
+            {/* <img src={select} alt="" /> */}
+            <SelectOutlined style={{color : selectFlag ? '#fff' : '#4c4671' , fontSize : '20px' }} color={selectFlag ? '#fff' : '#4c4671'}/>
             {/* <input type="file" id='fileInput' onChange={(e) => getPath(e)}
             /> */}
           </div>
-
+          </Popover>
         </div>
       </div>
 
@@ -643,13 +705,19 @@ export default function Home() {
         com={com}
         port={port}
         portname={portname}
+        portnameBack={portnameBack}
         local={local}
         dataArr={dataArr}
         matrixName={matrixName}
         setPortname={setPortname}
+        setPortnameBack={setPortnameBack}
         wsSendObj={wsSendObj}
         changeMatrix={changeMatrix}
         changeLocal={changeLocal}
+        colFlag = {colFlag}
+        setColFlag = {setColFlag}
+        colNum = {colNum}
+        selectFlag = {selectFlag}
       // changeDateArr={changeDateArr}
       />
       <Aside ref={data} />
@@ -744,6 +812,14 @@ export default function Home() {
                   dropdownMatchSelectWidth={false}
                   placement={'topLeft'}
                   options={[
+                    {
+                      value: 0.25,
+                      label: '0.25X',
+                    },
+                    {
+                      value: 0.5,
+                      label: '0.5X',
+                    },
                     {
                       value: 1,
                       label: '1.0X',

@@ -71,3 +71,4 @@ export const rainbowColors = [
     [255, 255, 255],
     ...new Array(5).fill([255, 255, 255]),
   ];
+
