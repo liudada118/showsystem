@@ -19,8 +19,9 @@ import select from '../../assets/images/select.png'
 import { findMax, findMin, returnChartMax, } from '../../assets/util/util'
 import { rainbowColors, rainbowTextColors } from "../../assets/util/color";
 import { handLine, footLine, carSitLine, carBackLine } from '../../assets/util/line';
-import { Select, Slider,Popover, } from 'antd'
-import {SelectOutlined} from '@ant-design/icons'
+import { Select, Popover, Slider } from 'antd'
+// import {  } from 'element-react'
+import { SelectOutlined } from '@ant-design/icons'
 import * as echarts from 'echarts'
 let ws, xvalue = 0, yvalue = 0, myChart2, sitIndexArr = new Array(4).fill(0), backIndexArr = new Array(4).fill(0), sitPress = 0, backPress = 0;
 let backTotal = 0, backMean = 0, backMax = 0, backMin = 0, backPoint = 0, backArea = 0, sitTotal = 0, sitMean = 0, sitMax = 0, sitMin = 0, sitPoint = 0, sitArea = 0
@@ -165,16 +166,16 @@ const initCharts1 = (props) => {
 export default function Home() {
   const com = useRef()
   const data = useRef()
-  const [valueg1, setValueg1] = useState(localStorage.getItem('carValueg') ? JSON.parse(localStorage.getItem('carValueg'))  : 2)
-  const [valuej1, setValuej1] = useState(localStorage.getItem('carValuej') ? JSON.parse(localStorage.getItem('carValuej'))  :200)
-  const [valuel1, setValuel1] = useState(localStorage.getItem('carValuel') ? JSON.parse(localStorage.getItem('carValuel'))  :2)
-  const [valuef1, setValuef1] = useState(localStorage.getItem('carValuef') ? JSON.parse(localStorage.getItem('carValuef'))  :2)
-  const [value1, setValue1] = useState(localStorage.getItem('carValue') ? JSON.parse(localStorage.getItem('carValue'))  :2)
+  const [valueg1, setValueg1] = useState(localStorage.getItem('carValueg') ? JSON.parse(localStorage.getItem('carValueg')) : 2)
+  const [valuej1, setValuej1] = useState(localStorage.getItem('carValuej') ? JSON.parse(localStorage.getItem('carValuej')) : 200)
+  const [valuel1, setValuel1] = useState(localStorage.getItem('carValuel') ? JSON.parse(localStorage.getItem('carValuel')) : 2)
+  const [valuef1, setValuef1] = useState(localStorage.getItem('carValuef') ? JSON.parse(localStorage.getItem('carValuef')) : 2)
+  const [value1, setValue1] = useState(localStorage.getItem('carValue') ? JSON.parse(localStorage.getItem('carValue')) : 2)
   const [port, setPort] = useState([])
   const [portname, setPortname] = useState('')
   const [portnameBack, setPortnameBack] = useState('')
   const [matrixName, setMatrixName] = useState('car')
-  const [valuelInit1, setValuelInit1] = useState(localStorage.getItem('carValueInit') ? JSON.parse(localStorage.getItem('carValueInit'))  :2)
+  const [valuelInit1, setValuelInit1] = useState(localStorage.getItem('carValueInit') ? JSON.parse(localStorage.getItem('carValueInit')) : 2)
   const [length, setLength] = useState(0)
   const [local, setLocal] = useState(false)
   const [dataArr, setDataArr] = useState([])
@@ -184,27 +185,13 @@ export default function Home() {
   const [xdata, setXdata] = useState(0)
   const [sitArr, setSitArr] = useState([])
   const [backArr, setBackArr] = useState([])
-  const [colFlag , setColFlag] = useState(true)
-  const [colNum , setColNum] = useState(0)
-  const [selectFlag , setSelectFlag] = useState(false)
+  const [colFlag, setColFlag] = useState(true)
+  const [colNum, setColNum] = useState(0)
+  const [selectFlag, setSelectFlag] = useState(false)
   useEffect(() => {
-    myChart2 = echarts.init(document.getElementById(`myChart2`));
-    // console.log(myChart2)
-    if (myChart2) {
-      initCharts1({
-        yData: [1, 23, 15, 24, 29, 14, 8, 17, 18, 12, 13, 14, 8, 17, 18, 12, 16, 14, 8, 17],
-        xData: [
-          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-          20,
-        ],
-        index: 0 + 2,
-        name: "中风",
-        myChart: myChart2,
-        //   yMax: 10000,
-      });
-    }
+   
 
-    ws = new WebSocket("ws://localhost:19999");
+    ws = new WebSocket("ws://192.168.31.114:19999");
     ws.onopen = () => {
       // connection opened
       console.info("connect success");
@@ -218,11 +205,11 @@ export default function Home() {
         let selectArr
         let wsPointData = jsonObject.sitData;
         // console.log(wsPointData)
-        if (!Array.isArray(wsPointData)) {
-          wsPointData = JSON.parse(wsPointData);
-        }
+        // if (!Array.isArray(wsPointData)) {
+        //   wsPointData = JSON.parse(wsPointData);
+        // }
 
-        if(colFlag){
+        if (colFlag) {
           let num = colNum
           num++
           setColNum(num)
@@ -250,7 +237,7 @@ export default function Home() {
             wsPointData: wsPointData,
           });
           selectArr = []
-          console.log(sitIndexArr, 'sitArr')
+          // console.log(sitIndexArr, 'sitArr')
           for (let i = sitIndexArr[0]; i < sitIndexArr[1]; i++) {
             for (let j = sitIndexArr[2]; j < sitIndexArr[3]; j++) {
               // sitPress += wsPointData[i*32 + j]
@@ -377,6 +364,7 @@ export default function Home() {
       }
       if (jsonObject.index != null) {
         setIndex(jsonObject.index)
+        console.log(jsonObject.index)
       }
 
     };
@@ -448,7 +436,7 @@ export default function Home() {
         ws.send(JSON.stringify({ index: obj.index }));
       }
     }
-
+    // console.log(obj.exchange)
     if (obj.exchange != null) {
       if (ws && ws.readyState === 1) {
         ws.send(JSON.stringify({ exchange: obj.exchange }));
@@ -526,26 +514,26 @@ export default function Home() {
 
   }
 
-const text = '旋转'
-const text2 = '框选'
+  const text = '旋转'
+  const text2 = '框选'
 
-const content = (
-  <div>
-    <p>绕x轴旋转30°</p>
-  </div>
-);
+  const content = (
+    <div>
+      <p>绕x轴旋转30°</p>
+    </div>
+  );
 
-const content1 = (
-  <div>
-    <p>绕y轴旋转30°</p>
-  </div>
-);
+  const content1 = (
+    <div>
+      <p>绕y轴旋转30°</p>
+    </div>
+  );
 
-const content2 = (
-  <div>
-    <p>款选一个矩形区域</p>
-  </div>
-);
+  const content2 = (
+    <div>
+      <p>款选一个矩形区域</p>
+    </div>
+  );
 
   return (
     <div className='home'>
@@ -573,19 +561,19 @@ const content2 = (
           <Popover placement="top" title={text} content={content1}
           // arrow={mergedArrow}
           >
-          <div className='setIcon' onClick={() => {
-            yvalue++
-            if (yvalue < 3) {
-              // com.current?.changeGroupRotate({ y: yvalue })
-              console.log(yvalue)
-            } else {
-              yvalue = 0
-              // com.current?.changeGroupRotate({ y: yvalue })
-              console.log(yvalue)
-            }
-          }}>
-            <img src={minus} alt="" />
-          </div>
+            <div className='setIcon' onClick={() => {
+              yvalue++
+              if (yvalue < 3) {
+                // com.current?.changeGroupRotate({ y: yvalue })
+                console.log(yvalue)
+              } else {
+                yvalue = 0
+                // com.current?.changeGroupRotate({ y: yvalue })
+                console.log(yvalue)
+              }
+            }}>
+              <img src={minus} alt="" />
+            </div>
           </Popover>
         </div>
 
@@ -633,19 +621,19 @@ const content2 = (
           <Popover placement="top" title={text2} content={content2}
           // arrow={mergedArrow}
           >
-          <div className='setIcon' onClick={() => {
-            const flag = selectFlag 
-            setSelectFlag(!flag)
-            com.current?.changeSelectFlag(flag)
-          }}
+            <div className='setIcon' onClick={() => {
+              const flag = selectFlag
+              setSelectFlag(!flag)
+              com.current?.changeSelectFlag(flag)
+            }}
 
-            
+
             >
-            {/* <img src={select} alt="" /> */}
-            <SelectOutlined style={{color : selectFlag ? '#fff' : '#4c4671' , fontSize : '20px' }} color={selectFlag ? '#fff' : '#4c4671'}/>
-            {/* <input type="file" id='fileInput' onChange={(e) => getPath(e)}
+              {/* <img src={select} alt="" /> */}
+              <SelectOutlined style={{ color: selectFlag ? '#fff' : '#4c4671', fontSize: '20px' }} color={selectFlag ? '#fff' : '#4c4671'} />
+              {/* <input type="file" id='fileInput' onChange={(e) => getPath(e)}
             /> */}
-          </div>
+            </div>
           </Popover>
         </div>
       </div>
@@ -689,7 +677,7 @@ const content2 = (
           );
         })}
       </div>
-      <Title
+      {/* <Title
         valueg1={valueg1}
         value1={value1}
         valuef1={valuef1}
@@ -714,13 +702,13 @@ const content2 = (
         wsSendObj={wsSendObj}
         changeMatrix={changeMatrix}
         changeLocal={changeLocal}
-        colFlag = {colFlag}
-        setColFlag = {setColFlag}
-        colNum = {colNum}
-        selectFlag = {selectFlag}
+        colFlag={colFlag}
+        setColFlag={setColFlag}
+        colNum={colNum}
+        selectFlag={selectFlag}
       // changeDateArr={changeDateArr}
-      />
-      <Aside ref={data} />
+      /> */}
+      {/* <Aside ref={data} /> */}
 
       {/* <div className='aside'>
         <div className="asideContent firstAside">
@@ -773,21 +761,22 @@ const content2 = (
         <div style={{ position: "fixed", bottom: 0, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ width: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', position: 'relative' }}>
             <Slider
-              tooltip={{
-                formatter,
-              }}
+              // tooltip={{
+              //   formatter,
+              // }}
 
               min={0}
               max={length - 2}
               onChange={(value) => {
-                localStorage.setItem("localValuej", value);
-                console.log(value)
+                // localStorage.setItem("localValuej", value);
+
                 setIndex(value)
                 if (ws && ws.readyState === 1) {
-                  ws.send(JSON.stringify({ value }))
+                  console.log(value)
+                  ws.send(JSON.stringify({ indexValue: value }))
                 }
               }}
-              value={index}
+              // value={index}
               step={1}
               style={{ width: '100%' }}
             />

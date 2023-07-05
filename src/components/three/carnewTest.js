@@ -647,17 +647,17 @@ const Canvas = React.forwardRef((props, refs) => {
 
   //  更新座椅数据
   function sitRenew() {
-    const newData = [...ndata]
+    const newData = [...ndata1]
     ndata1 = [...newData].map((a, index) => (a - valuef1 < 0 ? 0 : a ));
-
-    ndata1Num = ndata1.reduce((a, b) => a + b, 0);
+   
+    ndata1Num = [...newData].reduce((a, b) => a + b, 0);
     if (ndata1Num < valuelInit1) {
       ndata1 = new Array(sitnum1*sitnum2).fill(1);
     }else{
       ndata1 = [...newData]
     }
 
-
+    
     interp(ndata1, bigArr, sitnum1, sitInterp);
     // console.log(bigArr.filter((a) => a > 1).length)
     let bigArrs = addSide(

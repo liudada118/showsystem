@@ -162,6 +162,7 @@ const Title = (props) => {
           if(props.portname && props.portnameBack){
             props.setPortnameBack(props.portname)
             props.setPortname(props.portnameBack)
+            props.wsSendObj({exchange : true})
           }
         }} style={{ height: "30px", marginRight: 20 }} alt="" />
 

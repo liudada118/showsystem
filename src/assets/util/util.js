@@ -830,7 +830,7 @@ export function findMax(arr) {
 }
 
 export function returnChartMax(value) {
-  const chartValueArr = [3000, 5000, 10000, 18000, 30000, 45000, 60000, 80000]
+  const chartValueArr = [200,500,1000,1800,3000, 5000, 10000, 18000, 30000, 45000, 60000, 80000]
   for (let i = 0; i < chartValueArr.length - 1;) {
     if (value > chartValueArr[i] && value < chartValueArr[i + 1]) {
       return chartValueArr[i + 1]
